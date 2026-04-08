@@ -139,6 +139,8 @@ https://user-images.githubusercontent.com/66544866/173453972-6526e4e6-c6ef-41c5-
 
 ## 开发者
 
+Cygra - https://github.com/Cygra（本仓库作者）
+
 Elebumm (Lewis) - https://github.com/elebumm （原作者）
 
 Jason Cameron - https://github.com/JasonLovesDoggo （维护者）
