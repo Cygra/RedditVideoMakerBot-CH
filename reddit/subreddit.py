@@ -9,6 +9,7 @@ from utils.ai_methods import sort_by_similarity
 from utils.console import print_step, print_substep
 from utils.posttextparser import posttextparser
 from utils.subreddit import _contains_blocked_words, get_subreddit_undone
+from utils.translator import translate_reddit_object
 from utils.videos import check_done
 from utils.voice import sanitize_text
 
@@ -159,4 +160,8 @@ def get_subreddit_threads(POST_ID: str):
                             )
 
     print_substep("Received subreddit threads Successfully.", style="bold green")
+
+    # Translate content to Chinese using LLM
+    content = translate_reddit_object(content)
+
     return content

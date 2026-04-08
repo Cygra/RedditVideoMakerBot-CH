@@ -11,6 +11,7 @@ from utils import settings
 from utils.console import print_step, print_substep
 from utils.imagenarator import imagemaker
 from utils.playwright import clear_cookie_by_name
+from utils.subtitle_renderer import add_chinese_subtitle
 from utils.videos import save_data
 
 __all__ = ["get_screenshots_of_reddit_posts"]
@@ -200,6 +201,12 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
 
             raise e
 
+        # Add Chinese subtitle below the title screenshot
+        title_zh = reddit_object.get("thread_title_zh")
+        if title_zh:
+            print_substep("Adding Chinese subtitle to title screenshot...")
+            add_chinese_subtitle(postcontentpath, title_zh)
+
         if storymode:
             page.locator('[data-click-id="text"]').first.screenshot(
                 path=f"assets/temp/{reddit_id}/png/story_content.png"
@@ -257,6 +264,12 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
                     screenshot_num += 1
                     print("TimeoutError: Skipping screenshot...")
                     continue
+
+                # Add Chinese subtitle below the comment screenshot
+                comment_zh = comment.get("comment_body_zh")
+                if comment_zh:
+                    comment_img_path = f"assets/temp/{reddit_id}/png/comment_{idx}.png"
+                    add_chinese_subtitle(comment_img_path, comment_zh)
 
         # close browser instance when we are done using it
         browser.close()

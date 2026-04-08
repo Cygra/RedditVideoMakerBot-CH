@@ -1,142 +1,150 @@
-# Reddit Video Maker Bot 🎥
+# Reddit 视频生成器（中文版）🎥
 
-All done WITHOUT video editing or asset compiling. Just pure ✨programming magic✨.
+全自动生成 Reddit 帖子短视频，无需手动剪辑。纯 ✨编程魔法✨。
 
-Created by Lewis Menelaws & [TMRRW](https://tmrrwinc.ca)
+基于 [RedditVideoMakerBot](https://github.com/elebumm/RedditVideoMakerBot) 开发，增加了中文翻译、中文语音合成（豆包 TTS）和中文字幕功能。
 
-<a target="_blank" href="https://tmrrwinc.ca">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/6053155/170528535-e274dc0b-7972-4b27-af22-637f8c370133.png">
-  <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/6053155/170528582-cb6671e7-5a2f-4bd4-a048-0e6cfa54f0f7.png">
-  <img src="https://user-images.githubusercontent.com/6053155/170528582-cb6671e7-5a2f-4bd4-a048-0e6cfa54f0f7.png" width="350">
-</picture>
+## 功能简介
 
-</a>
+1. 通过 Reddit API 获取指定 subreddit 的帖子和评论
+2. 使用 LLM（OpenAI 兼容接口）将英文标题和评论翻译成中文
+3. 使用豆包 TTS 将中文文本合成语音
+4. 使用 Playwright 截取 Reddit 帖子/评论截图，并在下方拼接中文字幕条
+5. 下载背景视频（Minecraft 等游戏画面）
+6. 使用 FFmpeg 将截图、语音和背景视频合成最终视频
 
-## Video Explainer
+## 前置要求
 
-[![lewisthumbnail](https://user-images.githubusercontent.com/6053155/173631669-1d1b14ad-c478-4010-b57d-d79592a789f2.png)
-](https://www.youtube.com/watch?v=3gjcY_00U1w)
+- Python 3.10+（支持 3.10/3.11/3.12/3.13）
+- Playwright（安装时会自动安装）
+- FFmpeg（需要提前安装）
 
-## Motivation 🤔
+## 安装 👩‍💻
 
-These videos on TikTok, YouTube and Instagram get MILLIONS of views across all platforms and require very little effort.
-The only original thing being done is the editing and gathering of all materials...
-
-... but what if we can automate that process? 🤔
-
-## Disclaimers 🚨
-
-- **At the moment**, this repository won't attempt to upload this content through this bot. It will give you a file that
-  you will then have to upload manually. This is for the sake of avoiding any sort of community guideline issues.
-
-## Requirements
-
-- Python 3.10
-- Playwright (this should install automatically in installation)
-
-## Installation 👩‍💻
-
-1. Clone this repository:
+1. 克隆本仓库：
     ```sh
     git clone https://github.com/elebumm/RedditVideoMakerBot.git
     cd RedditVideoMakerBot
     ```
 
-2. Create and activate a virtual environment:
-    - On **Windows**:
+2. 创建并激活虚拟环境：
+    - **Windows**：
         ```sh
         python -m venv ./venv
         .\venv\Scripts\activate
         ```
-    - On **macOS and Linux**:
+    - **macOS 和 Linux**：
         ```sh
         python3 -m venv ./venv
         source ./venv/bin/activate
         ```
 
-3. Install the required dependencies:
+3. 安装依赖：
     ```sh
     pip install -r requirements.txt
     ```
 
-4. Install Playwright and its dependencies:
+4. 安装 Playwright 及其依赖：
     ```sh
     python -m playwright install
     python -m playwright install-deps
     ```
 
----
-
-**EXPERIMENTAL!!!!**
-
-   - On macOS and Linux (Debian, Arch, Fedora, CentOS, and based on those), you can run an installation script that will automatically install steps 1 to 3. (requires bash)
-   - `bash <(curl -sL https://raw.githubusercontent.com/elebumm/RedditVideoMakerBot/master/install.sh)`
-   - This can also be used to update the installation
-
----
-
-5. Run the bot:
+5. 运行程序：
     ```sh
     python main.py
     ```
 
-6. Visit [the Reddit Apps page](https://www.reddit.com/prefs/apps), and set up an app that is a "script". Paste any URL in the redirect URL field, for example: `https://jasoncameron.dev`.
+6. 首次运行时，程序会引导你填写 Reddit API 配置和其他设置。
 
-7. The bot will prompt you to fill in your details to connect to the Reddit API and configure the bot to your liking.
+7. 如需重新配置，打开 `config.toml` 文件，删除需要修改的行，下次运行时程序会重新引导配置。
 
-8. Enjoy 😎
+（注意：如果遇到安装或运行错误，请尝试使用 `python3` 或 `pip3` 代替 `python` 或 `pip`。）
 
-9. If you need to reconfigure the bot, simply open the `config.toml` file and delete the lines that need to be changed. On the next run of the bot, it will help you reconfigure those options.
+---
 
-(Note: If you encounter any errors installing or running the bot, try using `python3` or `pip3` instead of `python` or `pip`.)
+## 配置说明 ⚙️
 
-For a more detailed guide about the bot, please refer to the [documentation](https://reddit-video-maker-bot.netlify.app/).
+所有配置项在 `config.toml` 中设置。首次运行会自动生成配置文件。
 
-## Video
+### Reddit API 配置
+
+访问 [Reddit Apps 页面](https://www.reddit.com/prefs/apps)，创建一个类型为 "script" 的应用。将 Client ID 和 Client Secret 填入配置文件。
+
+### LLM 翻译配置
+
+在 `[settings.translation]` 部分配置翻译功能：
+
+```toml
+[settings.translation]
+translation_enabled = true          # 是否启用翻译（默认启用）
+llm_api_url = "https://api.openai.com/v1"  # OpenAI 兼容 API 地址
+llm_api_key = "sk-xxxxxxxx"         # API 密钥
+llm_model = "gpt-4o-mini"           # 使用的模型（默认 gpt-4o-mini）
+```
+
+**说明：**
+- 支持任何兼容 OpenAI Chat Completions API 的服务（如 OpenAI、Azure OpenAI、Deepseek 等）
+- 只需修改 `llm_api_url` 和 `llm_api_key` 即可切换不同的 LLM 服务商
+- `llm_model` 按照你使用的服务商填写对应的模型名称
+
+### 豆包 TTS 配置
+
+在 `[settings.tts]` 部分配置语音合成：
+
+```toml
+[settings.tts]
+voice_choice = "doubao"                           # TTS 引擎选择
+doubao_app_id = "your_app_id"                     # 豆包应用 ID
+doubao_access_key = "your_access_key"             # 豆包访问密钥
+doubao_resource_id = "seed-tts-1.0"               # 资源 ID（默认值即可）
+doubao_speaker = "zh_female_shuangkuaisisi_moon_bigtts"  # 说话人声音
+```
+
+**获取豆包 TTS 配置的步骤：**
+1. 访问 [火山引擎控制台](https://console.volcengine.com/)
+2. 开通「语音技术」服务
+3. 创建应用，获取 `App ID` 和 `Access Key`
+4. 在语音合成页面选择合适的音色，获取 `speaker` 名称
+
+**可用音色示例：**
+- `zh_female_shuangkuaisisi_moon_bigtts` — 女声（爽快思思）
+- `zh_male_rap_star_moon_bigtts` — 男声（说唱歌手）
+- `zh_female_wanwanxiaohe_moon_bigtts` — 女声（弯弯小何）
+- 更多音色请参考火山引擎文档
+
+### 其他 TTS 引擎
+
+如果不使用豆包 TTS，也可以选择以下英文 TTS 引擎（将 `voice_choice` 修改为对应名称）：
+- `tiktok` — TikTok TTS
+- `streamlabs_polly` — Streamlabs Polly
+- `aws_polly` — Amazon Polly
+- `edge` — Microsoft Edge TTS
+- `google` — Google Translate TTS
+- `pyttsx` — 本地 pyttsx3 TTS
+
+---
+
+## 免责声明 🚨
+
+- 本程序**不会**自动上传生成的视频。你需要手动上传到各个平台。
+
+## 视频示例
 
 https://user-images.githubusercontent.com/66544866/173453972-6526e4e6-c6ef-41c5-ab40-5d275e724e7c.mp4
 
-## Contributing & Ways to improve 📈
+## 贡献与改进 📈
 
-In its current state, this bot does exactly what it needs to do. However, improvements can always be made!
+欢迎提交 PR 和 Issue！请阅读 [贡献指南](CONTRIBUTING.md)。
 
-I have tried to simplify the code so anyone can read it and start contributing at any skill level. Don't be shy :) contribute!
+## 开发者
 
-- [ ] Creating better documentation and adding a command line interface.
-- [x] Allowing the user to choose background music for their videos.
-- [x] Allowing users to choose a reddit thread instead of being randomized.
-- [x] Allowing users to choose a background that is picked instead of the Minecraft one.
-- [x] Allowing users to choose between any subreddit.
-- [x] Allowing users to change voice.
-- [x] Checks if a video has already been created
-- [x] Light and Dark modes
-- [x] NSFW post filter
+Elebumm (Lewis) - https://github.com/elebumm （原作者）
 
-Please read our [contributing guidelines](CONTRIBUTING.md) for more detailed information.
+Jason Cameron - https://github.com/JasonLovesDoggo （维护者）
 
-### For any questions or support join the [Discord](https://discord.gg/qfQSx45xCV) server
+更多贡献者请查看 GitHub Contributors 页面。
 
-## Developers and maintainers.
-
-Elebumm (Lewis#6305) - https://github.com/elebumm (Founder)
-
-Jason Cameron - https://github.com/JasonLovesDoggo (Maintainer)
-
-Simon (OpenSourceSimon) - https://github.com/OpenSourceSimon
-
-CallumIO (c.#6837) - https://github.com/CallumIO
-
-Verq (Verq#2338) - https://github.com/CordlessCoder
-
-LukaHietala (Pix.#0001) - https://github.com/LukaHietala
-
-Freebiell (Freebie#3263) - https://github.com/FreebieII
-
-Aman Raza (electro199#8130) - https://github.com/electro199
-
-Cyteon (cyteon) - https://github.com/cyteon
-
-
-## LICENSE
-[Roboto Fonts](https://fonts.google.com/specimen/Roboto/about) are licensed under [Apache License V2](https://www.apache.org/licenses/LICENSE-2.0)
+## 许可证
+- [Roboto 字体](https://fonts.google.com/specimen/Roboto/about) 使用 [Apache License V2](https://www.apache.org/licenses/LICENSE-2.0) 授权
+- [Noto Sans CJK SC 字体](https://github.com/notofonts/noto-cjk) 使用 [SIL Open Font License](https://scripts.sil.org/OFL) 授权

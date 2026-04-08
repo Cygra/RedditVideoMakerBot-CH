@@ -66,24 +66,49 @@ class TTSEngine:
             comment["comment_body"] = comment["comment_body"].replace(". . ", ".")
             comment["comment_body"] = re.sub(r'\."\.', '".', comment["comment_body"])
 
+    def _is_chinese_tts(self):
+        """Check if the current TTS engine is a Chinese TTS (Doubao)."""
+        from TTS.doubao import DoubaoTTS
+        return isinstance(self.tts_module, DoubaoTTS)
+
+    def _get_text_for_tts(self, original_text: str, zh_text: str = None) -> str:
+        """Get the appropriate text for TTS based on engine type."""
+        if self._is_chinese_tts() and zh_text:
+            return zh_text
+        return process_text(original_text)
+
     def run(self) -> Tuple[int, int]:
         Path(self.path).mkdir(parents=True, exist_ok=True)
         print_step("Saving Text to MP3 files...")
 
         self.add_periods()
-        self.call_tts("title", process_text(self.reddit_object["thread_title"]))
-        # processed_text = ##self.reddit_object["thread_post"] != ""
+
+        # Use Chinese text for title if available and using Chinese TTS
+        title_text = self._get_text_for_tts(
+            self.reddit_object["thread_title"],
+            self.reddit_object.get("thread_title_zh"),
+        )
+        self.call_tts("title", title_text)
         idx = 0
 
         if settings.config["settings"]["storymode"]:
             if settings.config["settings"]["storymodemethod"] == 0:
-                if len(self.reddit_object["thread_post"]) > self.tts_module.max_chars:
-                    self.split_post(self.reddit_object["thread_post"], "postaudio")
+                post_text = self.reddit_object["thread_post"]
+                post_zh = self.reddit_object.get("thread_post_zh")
+                if self._is_chinese_tts() and post_zh:
+                    tts_text = post_zh if isinstance(post_zh, str) else " ".join(post_zh)
                 else:
-                    self.call_tts("postaudio", process_text(self.reddit_object["thread_post"]))
+                    tts_text = post_text
+                if len(tts_text) > self.tts_module.max_chars:
+                    self.split_post(tts_text, "postaudio")
+                else:
+                    self.call_tts("postaudio", process_text(tts_text) if not self._is_chinese_tts() else tts_text)
             elif settings.config["settings"]["storymodemethod"] == 1:
-                for idx, text in track(enumerate(self.reddit_object["thread_post"])):
-                    self.call_tts(f"postaudio-{idx}", process_text(text))
+                posts = self.reddit_object["thread_post"]
+                posts_zh = self.reddit_object.get("thread_post_zh", [])
+                for idx, text in track(enumerate(posts)):
+                    zh = posts_zh[idx] if self._is_chinese_tts() and idx < len(posts_zh) else None
+                    self.call_tts(f"postaudio-{idx}", self._get_text_for_tts(text, zh))
 
         else:
             for idx, comment in track(enumerate(self.reddit_object["comments"]), "Saving..."):
@@ -92,12 +117,12 @@ class TTSEngine:
                     self.length -= self.last_clip_length
                     idx -= 1
                     break
-                if (
-                    len(comment["comment_body"]) > self.tts_module.max_chars
-                ):  # Split the comment if it is too long
-                    self.split_post(comment["comment_body"], idx)  # Split the comment
-                else:  # If the comment is not too long, just call the tts engine
-                    self.call_tts(f"{idx}", process_text(comment["comment_body"]))
+                zh_text = comment.get("comment_body_zh")
+                tts_text = self._get_text_for_tts(comment["comment_body"], zh_text)
+                if len(tts_text) > self.tts_module.max_chars:
+                    self.split_post(tts_text, idx)
+                else:
+                    self.call_tts(f"{idx}", tts_text)
 
         print_substep("Saved Text to MP3 files successfully.", style="bold green")
         return self.length, idx

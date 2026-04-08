@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Dict, Final, Tuple
 
 import ffmpeg
-import translators
 from PIL import Image, ImageDraw, ImageFont
 from rich.console import Console
 from rich.progress import track
@@ -75,13 +74,7 @@ def name_normalize(name: str) -> str:
     name = re.sub(r"(\w+)\s?\/\s?(\w+)", r"\1 or \2", name)
     name = re.sub(r"\/", r"", name)
 
-    lang = settings.config["reddit"]["thread"]["post_lang"]
-    if lang:
-        print_substep("Translating filename...")
-        translated_name = translators.translate_text(name, translator="google", to_language=lang)
-        return translated_name
-    else:
-        return name
+    return name
 
 
 def prepare_background(reddit_id: str, W: int, H: int) -> str:
@@ -124,7 +117,14 @@ def create_fancy_thumbnail(image, text, text_color, padding, wrap=35):
     """
     print_step(f"Creating fancy thumbnail for: {text}")
     font_title_size = 47
-    font = ImageFont.truetype(os.path.join("fonts", "Roboto-Bold.ttf"), font_title_size)
+
+    # Use Chinese font if text contains Chinese characters
+    has_chinese = any('\u4e00' <= ch <= '\u9fff' for ch in text)
+    if has_chinese:
+        font = ImageFont.truetype(os.path.join("fonts", "NotoSansCJKsc-Bold.otf"), font_title_size)
+        wrap = 20  # Chinese characters are wider
+    else:
+        font = ImageFont.truetype(os.path.join("fonts", "Roboto-Bold.ttf"), font_title_size)
     image_width, image_height = image.size
 
     # Calculate text height to determine new image height
@@ -278,8 +278,12 @@ def make_final_video(
     title_template = Image.open("assets/title_template.png")
 
     title = reddit_obj["thread_title"]
-
-    title = name_normalize(title)
+    # Use Chinese title if available
+    title_zh = reddit_obj.get("thread_title_zh")
+    if title_zh:
+        title = title_zh
+    else:
+        title = name_normalize(title)
 
     font_color = "#000000"
     padding = 5
@@ -356,7 +360,7 @@ def make_final_video(
 
     title = extract_id(reddit_obj, "thread_title")
     idx = extract_id(reddit_obj)
-    title_thumb = reddit_obj["thread_title"]
+    title_thumb = reddit_obj.get("thread_title_zh") or reddit_obj["thread_title"]
 
     filename = f"{name_normalize(title)[:251]}"
     subreddit = settings.config["reddit"]["thread"]["subreddit"]
