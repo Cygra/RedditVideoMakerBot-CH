@@ -23,8 +23,8 @@
 
 1. 克隆本仓库：
     ```sh
-    git clone https://github.com/elebumm/RedditVideoMakerBot.git
-    cd RedditVideoMakerBot
+    git clone https://github.com/Cygra/RedditVideoMakerBot-CH.git
+    cd RedditVideoMakerBot-CH
     ```
 
 2. 创建并激活虚拟环境：
