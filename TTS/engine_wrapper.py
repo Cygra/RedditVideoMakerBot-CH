@@ -8,7 +8,6 @@ import translators
 from moviepy import AudioFileClip
 from moviepy.audio.AudioClip import AudioClip
 from moviepy.audio.fx import MultiplyVolume
-from rich.progress import track
 
 from utils import settings
 from utils.console import print_step, print_substep
@@ -92,23 +91,16 @@ class TTSEngine:
         idx = 0
 
         if settings.config["settings"]["storymode"]:
-            if settings.config["settings"]["storymodemethod"] == 0:
-                post_text = self.reddit_object["thread_post"]
-                post_zh = self.reddit_object.get("thread_post_zh")
-                if self._is_chinese_tts() and post_zh:
-                    tts_text = post_zh if isinstance(post_zh, str) else " ".join(post_zh)
-                else:
-                    tts_text = post_text
-                if len(tts_text) > self.tts_module.max_chars:
-                    self.split_post(tts_text, "postaudio")
-                else:
-                    self.call_tts("postaudio", process_text(tts_text) if not self._is_chinese_tts() else tts_text)
-            elif settings.config["settings"]["storymodemethod"] == 1:
-                posts = self.reddit_object["thread_post"]
-                posts_zh = self.reddit_object.get("thread_post_zh", [])
-                for idx, text in track(enumerate(posts)):
-                    zh = posts_zh[idx] if self._is_chinese_tts() and idx < len(posts_zh) else None
-                    self.call_tts(f"postaudio-{idx}", self._get_text_for_tts(text, zh))
+            post_text = self.reddit_object["thread_post"]
+            post_zh = self.reddit_object.get("thread_post_zh")
+            if self._is_chinese_tts() and post_zh:
+                tts_text = post_zh if isinstance(post_zh, str) else " ".join(post_zh)
+            else:
+                tts_text = post_text
+            if len(tts_text) > self.tts_module.max_chars:
+                self.split_post(tts_text, "postaudio")
+            else:
+                self.call_tts("postaudio", process_text(tts_text) if not self._is_chinese_tts() else tts_text)
 
         else:
             for idx, comment in track(enumerate(self.reddit_object["comments"]), "Saving..."):
@@ -168,18 +160,11 @@ class TTSEngine:
             print("OSError")
 
     def call_tts(self, filename: str, text: str):
-        if settings.config["settings"]["tts"]["voice_choice"] == "googletranslate":
-            # GTTS does not have the argument 'random_voice'
-            self.tts_module.run(
-                text,
-                filepath=f"{self.path}/{filename}.mp3",
-            )
-        else:
-            self.tts_module.run(
-                text,
-                filepath=f"{self.path}/{filename}.mp3",
-                random_voice=settings.config["settings"]["tts"]["random_voice"],
-            )
+        self.tts_module.run(
+            text,
+            filepath=f"{self.path}/{filename}.mp3",
+            random_voice=settings.config["settings"]["tts"]["random_voice"],
+        )
         # try:
         #     self.length += MP3(f"{self.path}/{filename}.mp3").info.length
         # except (MutagenError, HeaderNotFoundError):

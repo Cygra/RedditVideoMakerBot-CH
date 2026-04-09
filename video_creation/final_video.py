@@ -12,7 +12,6 @@ from typing import Dict, Final, Tuple
 import ffmpeg
 from PIL import Image, ImageDraw, ImageFont
 from rich.console import Console
-from rich.progress import track
 
 from utils import settings
 from utils.cleanup import cleanup
@@ -234,15 +233,8 @@ def make_final_video(
         )  # This is to fix the TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'
         exit()
     if settings.config["settings"]["storymode"]:
-        if settings.config["settings"]["storymodemethod"] == 0:
-            audio_clips = [ffmpeg.input(f"assets/temp/{reddit_id}/mp3/title.mp3")]
-            audio_clips.insert(1, ffmpeg.input(f"assets/temp/{reddit_id}/mp3/postaudio.mp3"))
-        elif settings.config["settings"]["storymodemethod"] == 1:
-            audio_clips = [
-                ffmpeg.input(f"assets/temp/{reddit_id}/mp3/postaudio-{i}.mp3")
-                for i in track(range(number_of_clips + 1), "Collecting the audio files...")
-            ]
-            audio_clips.insert(0, ffmpeg.input(f"assets/temp/{reddit_id}/mp3/title.mp3"))
+        audio_clips = [ffmpeg.input(f"assets/temp/{reddit_id}/mp3/title.mp3")]
+        audio_clips.insert(1, ffmpeg.input(f"assets/temp/{reddit_id}/mp3/postaudio.mp3"))
 
     else:
         audio_clips = [
@@ -302,43 +294,22 @@ def make_final_video(
     current_time = 0
     if settings.config["settings"]["storymode"]:
         audio_clips_durations = [
-            float(
-                ffmpeg.probe(f"assets/temp/{reddit_id}/mp3/postaudio-{i}.mp3")["format"]["duration"]
-            )
-            for i in range(number_of_clips)
-        ]
-        audio_clips_durations.insert(
-            0,
             float(ffmpeg.probe(f"assets/temp/{reddit_id}/mp3/title.mp3")["format"]["duration"]),
+            float(ffmpeg.probe(f"assets/temp/{reddit_id}/mp3/postaudio.mp3")["format"]["duration"]),
+        ]
+        image_clips.insert(
+            1,
+            ffmpeg.input(f"assets/temp/{reddit_id}/png/story_content.png").filter(
+                "scale", screenshot_width, -1
+            ),
         )
-        if settings.config["settings"]["storymodemethod"] == 0:
-            image_clips.insert(
-                1,
-                ffmpeg.input(f"assets/temp/{reddit_id}/png/story_content.png").filter(
-                    "scale", screenshot_width, -1
-                ),
-            )
-            background_clip = background_clip.overlay(
-                image_clips[0],
-                enable=f"between(t,{current_time},{current_time + audio_clips_durations[0]})",
-                x="(main_w-overlay_w)/2",
-                y="(main_h-overlay_h)/2",
-            )
-            current_time += audio_clips_durations[0]
-        elif settings.config["settings"]["storymodemethod"] == 1:
-            for i in track(range(0, number_of_clips + 1), "Collecting the image files..."):
-                image_clips.append(
-                    ffmpeg.input(f"assets/temp/{reddit_id}/png/img{i}.png")["v"].filter(
-                        "scale", screenshot_width, -1
-                    )
-                )
-                background_clip = background_clip.overlay(
-                    image_clips[i],
-                    enable=f"between(t,{current_time},{current_time + audio_clips_durations[i]})",
-                    x="(main_w-overlay_w)/2",
-                    y="(main_h-overlay_h)/2",
-                )
-                current_time += audio_clips_durations[i]
+        background_clip = background_clip.overlay(
+            image_clips[0],
+            enable=f"between(t,{current_time},{current_time + audio_clips_durations[0]})",
+            x="(main_w-overlay_w)/2",
+            y="(main_h-overlay_h)/2",
+        )
+        current_time += audio_clips_durations[0]
     else:
         for i in range(0, number_of_clips + 1):
             image_clips.append(

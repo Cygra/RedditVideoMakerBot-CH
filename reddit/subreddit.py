@@ -3,9 +3,7 @@ import re
 import requests
 
 from utils import settings
-from utils.ai_methods import sort_by_similarity
 from utils.console import print_step, print_substep
-from utils.posttextparser import posttextparser
 from utils.subreddit import _contains_blocked_words, get_subreddit_undone
 from utils.translator import translate_reddit_object
 from utils.videos import check_done
@@ -65,6 +63,88 @@ def _fetch_post_and_comments(post_id: str, comment_limit: int = 100) -> tuple:
     return post, comments
 
 
+def _select_best_thread_via_llm(threads: list, keywords: list, subreddit_name: str):
+    """Use LLM (Chat Completion API) to pick the most relevant thread.
+
+    Sends all thread titles as a numbered list to the LLM and asks it to return
+    the index of the most relevant one.  Falls back to the first valid thread
+    if the API call fails or returns an unexpected result.
+
+    Args:
+        threads: List of post dicts fetched from Reddit.
+        keywords: List of keyword strings for relevance matching.
+        subreddit_name: Name of the subreddit (used for fallback fetching).
+
+    Returns:
+        The chosen submission dict (already validated as undone / not blocked).
+    """
+    from utils.subreddit import get_subreddit_undone
+
+    # Build a numbered title list for the prompt
+    titles = [f"{i+1}. {t['title']}" for i, t in enumerate(threads)]
+    titles_text = "\n".join(titles)
+    keywords_text = ", ".join(keywords)
+
+    translation_cfg = settings.config.get("settings", {}).get("translation", {})
+    api_url = translation_cfg.get("llm_api_url", "https://api.openai.com/v1")
+    api_key = translation_cfg.get("llm_api_key", "")
+    model = translation_cfg.get("llm_model", "gpt-4o-mini")
+
+    if not api_key:
+        print_substep("LLM API key not set – falling back to default ordering.", style="yellow")
+        return get_subreddit_undone(threads, subreddit_name)
+
+    if api_url.endswith("/"):
+        api_url = api_url[:-1]
+    url = f"{api_url}/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "你是一个帖子相关性排序助手。用户会给你一组带编号的帖子标题和一组关键词。"
+                    "请从中选出与关键词最相关的那条帖子，只返回该帖子的编号（一个整数），"
+                    "不要输出其他任何内容。"
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"关键词：{keywords_text}\n\n帖子列表：\n{titles_text}",
+            },
+        ],
+        "temperature": 0,
+    }
+
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=30)
+        if resp.status_code != 200:
+            raise RuntimeError(f"LLM API error: {resp.status_code}")
+        data = resp.json()
+        answer = data["choices"][0]["message"]["content"].strip()
+        # Extract the first integer from the response
+        import re as _re
+        match = _re.search(r"\d+", answer)
+        if match:
+            idx = int(match.group()) - 1  # 1-indexed -> 0-indexed
+            if 0 <= idx < len(threads):
+                chosen = threads[idx]
+                # Re-order: put chosen thread first, then the rest
+                reordered = [chosen] + [t for i, t in enumerate(threads) if i != idx]
+                return get_subreddit_undone(reordered, subreddit_name)
+        # If parsing failed, fall back
+        print_substep("LLM returned unexpected result – falling back to default ordering.", style="yellow")
+    except Exception as e:
+        print_substep(f"LLM similarity selection failed: {e} – falling back.", style="yellow")
+
+    return get_subreddit_undone(threads, subreddit_name)
+
+
 def get_subreddit_threads(POST_ID: str):
     """
     Returns a list of threads from the AskReddit subreddit.
@@ -75,7 +155,6 @@ def get_subreddit_threads(POST_ID: str):
 
     # Ask user for subreddit input
     print_step("Getting subreddit threads...")
-    similarity_score = 0
     if not settings.config["reddit"]["thread"][
         "subreddit"
     ]:  # note to user. you can have multiple subreddits via '+' separated names
@@ -101,17 +180,13 @@ def get_subreddit_threads(POST_ID: str):
         submission, comments = _fetch_post_and_comments(
             settings.config["reddit"]["thread"]["post_id"]
         )
-    elif settings.config["ai"]["ai_similarity_enabled"]:  # ai sorting based on comparison
+    elif settings.config["ai"]["ai_similarity_enabled"]:  # ai sorting via LLM
         threads = _fetch_subreddit_posts(subreddit_name, sort="hot", limit=50)
         keywords = settings.config["ai"]["ai_similarity_keywords"].split(",")
         keywords = [keyword.strip() for keyword in keywords]
-        # Reformat the keywords for printing
         keywords_print = ", ".join(keywords)
         print(f"Sorting threads by similarity to the given keywords: {keywords_print}")
-        threads, similarity_scores = sort_by_similarity(threads, keywords)
-        submission, similarity_score = get_subreddit_undone(
-            threads, subreddit_name, similarity_scores=similarity_scores
-        )
+        submission = _select_best_thread_via_llm(threads, keywords, subreddit_name)
     else:
         threads = _fetch_subreddit_posts(subreddit_name, sort="hot", limit=25)
         submission = get_subreddit_undone(threads, subreddit_name)
@@ -135,11 +210,6 @@ def get_subreddit_threads(POST_ID: str):
     print_substep(f"Thread has {upvotes} upvotes", style="bold blue")
     print_substep(f"Thread has a upvote ratio of {ratio}%", style="bold blue")
     print_substep(f"Thread has {num_comments} comments", style="bold blue")
-    if similarity_score:
-        print_substep(
-            f"Thread has a similarity score up to {round(similarity_score * 100)}%",
-            style="bold blue",
-        )
 
     content["thread_url"] = threadurl
     content["thread_title"] = submission["title"]
@@ -147,10 +217,7 @@ def get_subreddit_threads(POST_ID: str):
     content["is_nsfw"] = submission["over_18"]
     content["comments"] = []
     if settings.config["settings"]["storymode"]:
-        if settings.config["settings"]["storymodemethod"] == 1:
-            content["thread_post"] = posttextparser(submission["selftext"])
-        else:
-            content["thread_post"] = submission["selftext"]
+        content["thread_post"] = submission["selftext"]
     else:
         # If we already have comments from _fetch_post_and_comments, use them;
         # otherwise fetch them now.
