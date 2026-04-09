@@ -38,7 +38,7 @@ print(
 """
 )
 print_markdown(
-    "### Thanks for using this tool! Feel free to contribute to this project on GitHub! If you have any questions, feel free to join my Discord server or submit a GitHub issue. You can find solutions to many common problems in the documentation: https://reddit-video-maker-bot.netlify.app/"
+    "### 感谢使用 Reddit 视频生成器（中文版）！如有问题，请在 GitHub 上提交 Issue。"
 )
 checkversion(__VERSION__)
 
@@ -83,9 +83,9 @@ def shutdown() -> NoReturn:
 
 
 if __name__ == "__main__":
-    if sys.version_info.major != 3 or sys.version_info.minor not in [10, 11, 12]:
+    if sys.version_info.major != 3 or sys.version_info.minor not in [10, 11, 12, 13]:
         print(
-            "Hey! Congratulations, you've made it so far (which is pretty rare with no Python 3.10). Unfortunately, this program only works on Python 3.10. Please install Python 3.10 and try again."
+            "该程序需要 Python 3.10 或更高版本（3.10/3.11/3.12/3.13）。请安装对应版本后重试。"
         )
         sys.exit()
     ffmpeg_install()
