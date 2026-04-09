@@ -11,6 +11,12 @@ from utils.videos import save_data
 
 __all__ = ["get_screenshots_of_reddit_posts"]
 
+# ── Selector constants for the current Reddit redesign (shreddit) ─────────
+_SEL_POST = "shreddit-post"
+_SEL_TITLE = 'h1[slot="title"]'
+_SEL_COMMENT = 'shreddit-comment[thingid="t1_{cid}"]'
+_SEL_COMMENT_BODY = "#t1_{cid}-comment-rtjson-content"
+
 
 def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, page):
     """Downloads screenshots of reddit posts as seen on the web. Downloads to assets/temp/png
@@ -26,6 +32,9 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
     H: Final[int] = int(settings.config["settings"]["resolution_h"])
     storymode: Final[bool] = settings.config["settings"]["storymode"]
 
+    translation_cfg = settings.config.get("settings", {}).get("translation", {})
+    chinese_overlay: Final[bool] = translation_cfg.get("screenshot_chinese_overlay", True)
+
     print_step("Downloading screenshots of reddit posts...")
     reddit_id = re.sub(r"[^\w\s-]", "", reddit_object["thread_id"])
     # ! Make sure the reddit screenshots folder exists
@@ -37,54 +46,53 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
     page.wait_for_load_state()
     page.wait_for_timeout(5000)
 
-    if page.locator(
-        "#t3_12hmbug > div > div._3xX726aBn29LDbsDtzr_6E._1Ap4F5maDtT1E1YuCiaO0r.D3IL3FD0RFy_mkKLPwL4 > div > div > button"
-    ).is_visible():
-        # This means the post is NSFW and requires to click the proceed button.
+    # Dismiss any NSFW interstitial overlay
+    try:
+        nsfw_btn = page.locator("button:has-text('Yes')", has=page.locator("text=Are you sure"))
+        if nsfw_btn.first.is_visible(timeout=2000):
+            print_substep("Post is NSFW. You are spicy...")
+            nsfw_btn.first.click()
+            page.wait_for_load_state()
+    except Exception:
+        pass
 
-        print_substep("Post is NSFW. You are spicy...")
-        page.locator(
-            "#t3_12hmbug > div > div._3xX726aBn29LDbsDtzr_6E._1Ap4F5maDtT1E1YuCiaO0r.D3IL3FD0RFy_mkKLPwL4 > div > div > button"
-        ).click()
-        page.wait_for_load_state()  # Wait for page to fully load
-
-        # translate code
-    if page.locator(
-        "#SHORTCUT_FOCUSABLE_DIV > div:nth-child(7) > div > div > div > header > div > div._1m0iFpls1wkPZJVo38-LSh > button > i"
-    ).is_visible():
-        page.locator(
-            "#SHORTCUT_FOCUSABLE_DIV > div:nth-child(7) > div > div > div > header > div > div._1m0iFpls1wkPZJVo38-LSh > button > i"
-        ).click()  # Interest popup is showing, this code will close it
+    # Dismiss any popup / overlay that might block the content
+    try:
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(500)
+    except Exception:
+        pass
 
     # Append Chinese translation below the original title text
-    title_zh = reddit_object.get("thread_title_zh")
-    if title_zh:
-        print_substep("Appending Chinese translation to title...")
-        page.evaluate(
-            """tl_content => {
-                const el = document.querySelector('[data-adclicklocation="title"] > div > div > h1');
-                if (el) {
-                    el.appendChild(document.createElement('br'));
-                    el.appendChild(document.createTextNode(tl_content));
-                }
-            }""",
-            title_zh,
-        )
+    if chinese_overlay:
+        title_zh = reddit_object.get("thread_title_zh")
+        if title_zh:
+            print_substep("Appending Chinese translation to title...")
+            page.evaluate(
+                """tl_content => {
+                    const el = document.querySelector('h1[slot="title"]');
+                    if (el) {
+                        const zhSpan = document.createElement('div');
+                        zhSpan.style.marginTop = '8px';
+                        zhSpan.style.fontSize = '0.9em';
+                        zhSpan.textContent = tl_content;
+                        el.parentNode.insertBefore(zhSpan, el.nextSibling);
+                    }
+                }""",
+                title_zh,
+            )
 
     postcontentpath = f"assets/temp/{reddit_id}/png/title.png"
     try:
         if settings.config["settings"]["zoom"] != 1:
-            # store zoom settings
             zoom = settings.config["settings"]["zoom"]
-            # zoom the body of the page
             page.evaluate("document.body.style.zoom=" + str(zoom))
-            # as zooming the body doesn't change the properties of the divs, we need to adjust for the zoom
-            location = page.locator('[data-test-id="post-content"]').bounding_box()
+            location = page.locator(_SEL_POST).bounding_box()
             for i in location:
                 location[i] = float("{:.2f}".format(location[i] * zoom))
             page.screenshot(clip=location, path=postcontentpath)
         else:
-            page.locator('[data-test-id="post-content"]').screenshot(path=postcontentpath)
+            page.locator(_SEL_POST).screenshot(path=postcontentpath)
     except Exception as e:
         print_substep("Something went wrong!", style="red")
         resp = input(
@@ -105,7 +113,8 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
         raise e
 
     if storymode:
-        page.locator('[data-click-id="text"]').first.screenshot(
+        # In the new design, post body text lives inside shreddit-post
+        page.locator(f'{_SEL_POST} div[slot="text-body"]').first.screenshot(
             path=f"assets/temp/{reddit_id}/png/story_content.png"
         )
     else:
@@ -119,34 +128,38 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
             if idx >= screenshot_num:
                 break
 
-            if page.locator('[data-testid="content-gate"]').is_visible():
-                page.locator('[data-testid="content-gate"] button').click()
+            comment_url = comment["comment_url"]
+            page.goto(f"https://www.reddit.com{comment_url}", timeout=0)
+            page.wait_for_load_state()
+            page.wait_for_timeout(3000)
 
-            page.goto(f"https://new.reddit.com/{comment['comment_url']}")
+            cid = comment["comment_id"]
+            comment_sel = _SEL_COMMENT.format(cid=cid)
+            comment_body_sel = _SEL_COMMENT_BODY.format(cid=cid)
 
             # Append Chinese translation below the original comment text
-            comment_zh = comment.get("comment_body_zh")
-            if comment_zh:
-                page.evaluate(
-                    """([tl_content, tl_id]) => {
-                        const el = document.querySelector('#t1_' + tl_id + ' > div:nth-child(2) > div > div[data-testid="comment"] > div');
-                        if (el) {
-                            el.appendChild(document.createElement('br'));
-                            el.appendChild(document.createTextNode(tl_content));
-                        }
-                    }""",
-                    [comment_zh, comment["comment_id"]],
-                )
+            if chinese_overlay:
+                comment_zh = comment.get("comment_body_zh")
+                if comment_zh:
+                    page.evaluate(
+                        """([tl_content, bodySelector]) => {
+                            const el = document.querySelector(bodySelector);
+                            if (el) {
+                                const zhDiv = document.createElement('div');
+                                zhDiv.style.marginTop = '6px';
+                                zhDiv.style.fontSize = '0.95em';
+                                zhDiv.textContent = tl_content;
+                                el.appendChild(zhDiv);
+                            }
+                        }""",
+                        [comment_zh, comment_body_sel],
+                    )
             try:
                 if settings.config["settings"]["zoom"] != 1:
-                    # store zoom settings
                     zoom = settings.config["settings"]["zoom"]
-                    # zoom the body of the page
                     page.evaluate("document.body.style.zoom=" + str(zoom))
-                    # scroll comment into view
-                    page.locator(f"#t1_{comment['comment_id']}").scroll_into_view_if_needed()
-                    # as zooming the body doesn't change the properties of the divs, we need to adjust for the zoom
-                    location = page.locator(f"#t1_{comment['comment_id']}").bounding_box()
+                    page.locator(comment_sel).scroll_into_view_if_needed()
+                    location = page.locator(comment_sel).bounding_box()
                     for i in location:
                         location[i] = float("{:.2f}".format(location[i] * zoom))
                     page.screenshot(
@@ -154,7 +167,7 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
                         path=f"assets/temp/{reddit_id}/png/comment_{idx}.png",
                     )
                 else:
-                    page.locator(f"#t1_{comment['comment_id']}").screenshot(
+                    page.locator(comment_sel).screenshot(
                         path=f"assets/temp/{reddit_id}/png/comment_{idx}.png"
                     )
             except TimeoutError:

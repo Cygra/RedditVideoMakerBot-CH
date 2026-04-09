@@ -92,9 +92,9 @@ def shutdown() -> NoReturn:
 
 
 if __name__ == "__main__":
-    if sys.version_info.major != 3 or sys.version_info.minor not in [10, 11, 12, 13]:
+    if sys.version_info.major != 3 or sys.version_info.minor not in [10, 11, 12, 13, 14]:
         print(
-            "该程序需要 Python 3.10 或更高版本（3.10/3.11/3.12/3.13）。请安装对应版本后重试。"
+            "该程序需要 Python 3.10 或更高版本（3.10/3.11/3.12/3.13/3.14）。请安装对应版本后重试。"
         )
         sys.exit()
     ffmpeg_install()

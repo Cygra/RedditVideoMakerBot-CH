@@ -8,5 +8,5 @@ Flask==3.1.1
 clean-text==0.6.0
 unidecode==1.4.0
 ffmpeg-python==0.2.0
-yt-dlp==2025.10.22
+yt-dlp==2026.3.17
 openai>=1.0.0
