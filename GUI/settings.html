@@ -9,32 +9,6 @@
             <!-- Reddit Credentials -->
             <p class="h4">Reddit Credentials</p>
             <div class="row mb-2">
-                <label for="client_id" class="col-4">Client ID</label>
-                <div class="col-8">
-                    <div class="input-group">
-                        <div class="input-group-text">
-                            <i class="bi bi-person"></i>
-                        </div>
-                        <input name="client_id" value="{{ data.client_id }}" placeholder="Your Reddit app's client ID"
-                            type="text" class="form-control" data-toggle="tooltip"
-                            data-original-title='Text under "personal use script" on www.reddit.com/prefs/apps'>
-                    </div>
-                </div>
-            </div>
-            <div class="row mb-2">
-                <label for="client_secret" class="col-4">Client Secret</label>
-                <div class="col-8">
-                    <div class="input-group">
-                        <div class="input-group-text">
-                            <i class="bi bi-key-fill"></i>
-                        </div>
-                        <input name="client_secret" value="{{ data.client_secret }}"
-                            placeholder="Your Reddit app's client secret" type="text" class="form-control"
-                            data-toggle="tooltip" data-original-title='"Secret" on www.reddit.com/prefs/apps'>
-                    </div>
-                </div>
-            </div>
-            <div class="row mb-2">
                 <label for="username" class="col-4">Reddit Username</label>
                 <div class="col-8">
                     <div class="input-group">
@@ -56,18 +30,6 @@
                         <input name="password" value="{{ data.password }}" placeholder="Your Reddit account's password"
                             type="password" class="form-control">
                     </div>
-                </div>
-            </div>
-            <div class="row mb-2">
-                <label class="col-4">Do you have Reddit 2FA enabled?</label>
-                <div class="col-8">
-                    <div class="form-check form-switch">
-                        <input name="2fa" class="form-check-input" type="checkbox" value="True" data-toggle="tooltip"
-                            data-original-title='Check it if you have enabled 2FA on your Reddit account'>
-                    </div>
-                    <span class="form-text text-muted"><a
-                            href="https://reddit-video-maker-bot.netlify.app/docs/configuring#setting-up-the-api"
-                            target="_blank">Need help? Click here to open step-by-step guide.</a></span>
                 </div>
             </div>
 

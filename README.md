@@ -6,7 +6,7 @@
 
 ## 功能简介
 
-1. 通过 Reddit API 获取指定 subreddit 的帖子和评论
+1. 通过 Reddit 公开 JSON API 获取指定 subreddit 的帖子和评论
 2. 使用 LLM（OpenAI 兼容接口）将英文标题和评论翻译成中文
 3. 使用豆包 TTS 将中文文本合成语音
 4. 使用 Playwright 截取 Reddit 帖子/评论截图，并在下方拼接中文字幕条
@@ -55,7 +55,7 @@
     python main.py
     ```
 
-6. 首次运行时，程序会引导你填写 Reddit API 配置和其他设置。
+6. 首次运行时，程序会引导你填写 Reddit 用户名密码和其他设置。
 
 7. 如需重新配置，打开 `config.toml` 文件，删除需要修改的行，下次运行时程序会重新引导配置。
 
@@ -67,9 +67,11 @@
 
 所有配置项在 `config.toml` 中设置。首次运行会自动生成配置文件。
 
-### Reddit API 配置
+### Reddit 配置
 
-访问 [Reddit Apps 页面](https://www.reddit.com/prefs/apps)，创建一个类型为 "script" 的应用。将 Client ID 和 Client Secret 填入配置文件。
+本项目通过 Reddit 公开的 JSON API 获取帖子和评论，**无需注册 Reddit API 应用**。
+
+你只需要在配置文件中填写 Reddit 用户名和密码，这仅用于 Playwright 登录 Reddit 网页以截取帖子和评论截图。如果你不需要截图功能，也可以留空。
 
 ### LLM 翻译配置
 
