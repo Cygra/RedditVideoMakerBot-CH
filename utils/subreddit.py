@@ -127,7 +127,7 @@ def get_subreddit_undone(submissions: list, subreddit_name: str, times_checked=0
         _fetch_top_posts(
             subreddit_name,
             time_filter=VALID_TIME_FILTERS[index],
-            limit=(50 if int(index) == 0 else index + 1 * 50),
+            limit=(50 if int(index) == 0 else (index + 1) * 50),
         ),
         subreddit_name,
         times_checked=index,

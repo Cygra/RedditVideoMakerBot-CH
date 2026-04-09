@@ -71,6 +71,7 @@ def get_subreddit_threads(POST_ID: str):
     """
 
     content = {}
+    comments = None
 
     # Ask user for subreddit input
     print_step("Getting subreddit threads...")
@@ -153,7 +154,7 @@ def get_subreddit_threads(POST_ID: str):
     else:
         # If we already have comments from _fetch_post_and_comments, use them;
         # otherwise fetch them now.
-        if "comments" not in dir() or comments is None:
+        if comments is None:
             _, comments = _fetch_post_and_comments(submission["id"])
 
         for top_level_comment in comments:
