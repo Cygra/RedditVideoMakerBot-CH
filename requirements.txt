@@ -3,7 +3,6 @@ playwright==1.49.1
 requests==2.32.3
 rich==13.9.4
 toml==0.10.2
-translators==5.9.9
 tomlkit==0.13.2
 Flask==3.1.1
 clean-text==0.6.0

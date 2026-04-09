@@ -2,14 +2,14 @@
 
 全自动生成 Reddit 帖子短视频，无需手动剪辑。纯 ✨编程魔法✨。
 
-基于 [RedditVideoMakerBot](https://github.com/elebumm/RedditVideoMakerBot) 开发，增加了中文翻译、中文语音合成（豆包 TTS）和中文字幕功能。
+基于 [RedditVideoMakerBot](https://github.com/elebumm/RedditVideoMakerBot) 开发，增加了中文翻译和中文语音合成（豆包 TTS）功能。
 
 ## 功能简介
 
 1. 通过 Reddit 公开 JSON API 获取指定 subreddit 的帖子和评论
 2. 使用 LLM（OpenAI 兼容接口）将英文标题和评论翻译成中文
 3. 使用豆包 TTS 将中文文本合成语音
-4. 使用 Playwright 截取 Reddit 帖子/评论截图，并在下方拼接中文字幕条
+4. 使用 Playwright 截取 Reddit 帖子/评论截图（截图中包含原文及中文翻译）
 5. 下载背景视频（Minecraft 等游戏画面）
 6. 使用 FFmpeg 将截图、语音和背景视频合成最终视频
 

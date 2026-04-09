@@ -3,14 +3,12 @@ import re
 from pathlib import Path
 from typing import Dict, Final
 
-import translators
 from playwright.sync_api import ViewportSize, sync_playwright
 from rich.progress import track
 
 from utils import settings
 from utils.console import print_step, print_substep
 from utils.playwright import clear_cookie_by_name
-from utils.subtitle_renderer import add_chinese_subtitle
 from utils.videos import save_data
 
 __all__ = ["get_screenshots_of_reddit_posts"]
@@ -26,7 +24,6 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
     # settings values
     W: Final[int] = int(settings.config["settings"]["resolution_w"])
     H: Final[int] = int(settings.config["settings"]["resolution_h"])
-    lang: Final[str] = settings.config["reddit"]["thread"]["post_lang"]
     storymode: Final[bool] = settings.config["settings"]["storymode"]
 
     print_step("Downloading screenshots of reddit posts...")
@@ -72,7 +69,7 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
         dsf = (W // 600) + 1
 
         context = browser.new_context(
-            locale=lang or "en-CA,en;q=0.9",
+            locale="en-CA,en;q=0.9",
             color_scheme="dark",
             viewport=ViewportSize(width=W, height=H),
             device_scale_factor=dsf,
@@ -143,20 +140,17 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
                 "#SHORTCUT_FOCUSABLE_DIV > div:nth-child(7) > div > div > div > header > div > div._1m0iFpls1wkPZJVo38-LSh > button > i"
             ).click()  # Interest popup is showing, this code will close it
 
-        if lang:
-            print_substep("Translating post...")
-            texts_in_tl = translators.translate_text(
-                reddit_object["thread_title"],
-                to_language=lang,
-                translator="google",
-            )
-
+        # Append Chinese translation below the original title text
+        title_zh = reddit_object.get("thread_title_zh")
+        if title_zh:
+            print_substep("Appending Chinese translation to title...")
             page.evaluate(
-                "tl_content => document.querySelector('[data-adclicklocation=\"title\"] > div > div > h1').textContent = tl_content",
-                texts_in_tl,
+                """tl_content => {
+                    const el = document.querySelector('[data-adclicklocation="title"] > div > div > h1');
+                    if (el) { el.innerHTML = el.innerHTML + '<br>' + tl_content; }
+                }""",
+                title_zh,
             )
-        else:
-            print_substep("Skipping translation...")
 
         postcontentpath = f"assets/temp/{reddit_id}/png/title.png"
         try:
@@ -191,12 +185,6 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
 
             raise e
 
-        # Add Chinese subtitle below the title screenshot
-        title_zh = reddit_object.get("thread_title_zh")
-        if title_zh:
-            print_substep("Adding Chinese subtitle to title screenshot...")
-            add_chinese_subtitle(postcontentpath, title_zh)
-
         if storymode:
             page.locator('[data-click-id="text"]').first.screenshot(
                 path=f"assets/temp/{reddit_id}/png/story_content.png"
@@ -217,17 +205,15 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
 
                 page.goto(f"https://new.reddit.com/{comment['comment_url']}")
 
-                # translate code
-
-                if settings.config["reddit"]["thread"]["post_lang"]:
-                    comment_tl = translators.translate_text(
-                        comment["comment_body"],
-                        translator="google",
-                        to_language=settings.config["reddit"]["thread"]["post_lang"],
-                    )
+                # Append Chinese translation below the original comment text
+                comment_zh = comment.get("comment_body_zh")
+                if comment_zh:
                     page.evaluate(
-                        '([tl_content, tl_id]) => document.querySelector(`#t1_${tl_id} > div:nth-child(2) > div > div[data-testid="comment"] > div`).textContent = tl_content',
-                        [comment_tl, comment["comment_id"]],
+                        """([tl_content, tl_id]) => {
+                            const el = document.querySelector('#t1_' + tl_id + ' > div:nth-child(2) > div > div[data-testid="comment"] > div');
+                            if (el) { el.innerHTML = el.innerHTML + '<br>' + tl_content; }
+                        }""",
+                        [comment_zh, comment["comment_id"]],
                     )
                 try:
                     if settings.config["settings"]["zoom"] != 1:
@@ -254,12 +240,6 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
                     screenshot_num += 1
                     print("TimeoutError: Skipping screenshot...")
                     continue
-
-                # Add Chinese subtitle below the comment screenshot
-                comment_zh = comment.get("comment_body_zh")
-                if comment_zh:
-                    comment_img_path = f"assets/temp/{reddit_id}/png/comment_{idx}.png"
-                    add_chinese_subtitle(comment_img_path, comment_zh)
 
         # close browser instance when we are done using it
         browser.close()
