@@ -108,10 +108,10 @@ doubao_speaker = "zh_female_shuangkuaisisi_moon_bigtts"  # 说话人声音
 4. 在语音合成页面选择合适的音色，获取 `speaker` 名称
 
 **可用音色示例：**
-- `zh_female_shuangkuaisisi_moon_bigtts` — 女声（爽快思思）
-- `zh_male_rap_star_moon_bigtts` — 男声（说唱歌手）
-- `zh_female_wanwanxiaohe_moon_bigtts` — 女声（弯弯小何）
-- 更多音色请参考火山引擎文档
+- `zh_female_shuangkuaisisi_uranus_bigtts` — 女声（爽快思思 2.0）
+- `zh_female_peiqi_uranus_bigtts` — 女生（佩奇猪 2.0）
+- `zh_male_shaonianzixin_uranus_bigtts` — 男声（少年梓辛/Brayan 2.0）
+- 更多音色请参考[火山引擎文档](https://www.volcengine.com/docs/6561/1257544)
 
 ### 其他 TTS 引擎
 
