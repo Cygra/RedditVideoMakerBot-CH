@@ -147,7 +147,10 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
             page.evaluate(
                 """tl_content => {
                     const el = document.querySelector('[data-adclicklocation="title"] > div > div > h1');
-                    if (el) { el.innerHTML = el.innerHTML + '<br>' + tl_content; }
+                    if (el) {
+                        el.appendChild(document.createElement('br'));
+                        el.appendChild(document.createTextNode(tl_content));
+                    }
                 }""",
                 title_zh,
             )
@@ -211,7 +214,10 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
                     page.evaluate(
                         """([tl_content, tl_id]) => {
                             const el = document.querySelector('#t1_' + tl_id + ' > div:nth-child(2) > div > div[data-testid="comment"] > div');
-                            if (el) { el.innerHTML = el.innerHTML + '<br>' + tl_content; }
+                            if (el) {
+                                el.appendChild(document.createElement('br'));
+                                el.appendChild(document.createTextNode(tl_content));
+                            }
                         }""",
                         [comment_zh, comment["comment_id"]],
                     )
