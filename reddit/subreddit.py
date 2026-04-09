@@ -38,21 +38,32 @@ def _fetch_subreddit_posts(subreddit_name: str, sort: str = "hot", limit: int = 
     return [child["data"] for child in data["data"]["children"]]
 
 
-def _fetch_post_and_comments(post_id: str, comment_limit: int = 100) -> tuple:
-    """Fetch a single post and its comments using the public JSON API.
+def _fetch_post_and_comments(post_id: str, comment_limit: int = 100, page=None) -> tuple:
+    """Fetch a single post and its comments.
+
+    Uses the provided Playwright page's authenticated context when available
+    (to avoid 403 responses from Reddit), otherwise falls back to a plain
+    unauthenticated HTTP request.
 
     Args:
         post_id: Reddit post ID (e.g. '1sg3sdt').
         comment_limit: Maximum number of comments to return.
+        page: Optional Playwright ``Page`` whose context is already logged in
+              to Reddit.  When supplied, the request reuses the browser's
+              session cookies so Reddit does not block it with a 403.
 
     Returns:
         Tuple of (post_dict, list_of_comment_dicts).
     """
     url = f"https://www.reddit.com/comments/{post_id}.json"
-    params = {"limit": comment_limit}
-    resp = requests.get(url, headers=_HEADERS, params=params, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
+    params = {"limit": str(comment_limit)}
+    if page is not None:
+        response = page.request.get(url, params=params)
+        data = response.json()
+    else:
+        resp = requests.get(url, headers=_HEADERS, params={"limit": comment_limit}, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
 
     post = data[0]["data"]["children"][0]["data"]
 
@@ -144,7 +155,7 @@ def _select_best_thread_via_llm(threads: list, keywords: list, subreddit_name: s
     return get_subreddit_undone(threads, subreddit_name)
 
 
-def get_subreddit_threads(POST_ID: str):
+def get_subreddit_threads(POST_ID: str, page=None):
     """
     Returns a list of threads from the AskReddit subreddit.
     """
@@ -170,14 +181,14 @@ def get_subreddit_threads(POST_ID: str):
             subreddit_name = subreddit_name[2:]
 
     if POST_ID:  # would only be called if there are multiple queued posts
-        submission, comments = _fetch_post_and_comments(POST_ID)
+        submission, comments = _fetch_post_and_comments(POST_ID, page=page)
 
     elif (
         settings.config["reddit"]["thread"]["post_id"]
         and len(str(settings.config["reddit"]["thread"]["post_id"]).split("+")) == 1
     ):
         submission, comments = _fetch_post_and_comments(
-            settings.config["reddit"]["thread"]["post_id"]
+            settings.config["reddit"]["thread"]["post_id"], page=page
         )
     elif settings.config["ai"]["ai_similarity_enabled"]:  # ai sorting via LLM
         threads = _fetch_subreddit_posts(subreddit_name, sort="hot", limit=50)
@@ -221,7 +232,7 @@ def get_subreddit_threads(POST_ID: str):
         # If we already have comments from _fetch_post_and_comments, use them;
         # otherwise fetch them now.
         if comments is None:
-            _, comments = _fetch_post_and_comments(submission["id"])
+            _, comments = _fetch_post_and_comments(submission["id"], page=page)
 
         for top_level_comment in comments:
             body = top_level_comment.get("body", "")

@@ -12,6 +12,7 @@ from utils.cleanup import cleanup
 from utils.console import print_markdown, print_step, print_substep
 from utils.ffmpeg_install import ffmpeg_install
 from utils.id import extract_id
+from utils.playwright import create_reddit_session
 from utils.version import checkversion
 from video_creation.background import (
     chop_background,
@@ -22,6 +23,7 @@ from video_creation.background import (
 from video_creation.final_video import make_final_video
 from video_creation.screenshot_downloader import get_screenshots_of_reddit_posts
 from video_creation.voices import save_text_to_mp3
+from playwright.sync_api import sync_playwright
 
 __VERSION__ = "3.4.0"
 
@@ -46,12 +48,21 @@ reddit_object: Dict[str, str | list]
 
 def main(POST_ID=None) -> None:
     global reddit_id, reddit_object
-    reddit_object = get_subreddit_threads(POST_ID)
-    reddit_id = extract_id(reddit_object)
-    print_substep(f"Thread ID is {reddit_id}", style="bold blue")
-    length, number_of_comments = save_text_to_mp3(reddit_object)
-    length = math.ceil(length)
-    get_screenshots_of_reddit_posts(reddit_object, number_of_comments)
+
+    W = int(settings.config["settings"]["resolution_w"])
+    H = int(settings.config["settings"]["resolution_h"])
+    theme = settings.config["settings"]["theme"]
+
+    with sync_playwright() as p:
+        browser, _context, page = create_reddit_session(p, W, H, theme)
+        reddit_object = get_subreddit_threads(POST_ID, page=page)
+        reddit_id = extract_id(reddit_object)
+        print_substep(f"Thread ID is {reddit_id}", style="bold blue")
+        length, number_of_comments = save_text_to_mp3(reddit_object)
+        length = math.ceil(length)
+        get_screenshots_of_reddit_posts(reddit_object, number_of_comments, page=page)
+        browser.close()
+
     bg_config = {
         "video": get_background_config("video"),
         "audio": get_background_config("audio"),

@@ -45,10 +45,10 @@ silence_duration = { optional = true, example = "0.1", explanation = "Time in se
 no_emojis = { optional = false, type = "bool", default = false, example = false, options = [true, false,], explanation = "Whether to remove emojis from the comments" }
 
 # Doubao (豆包) TTS settings
-doubao_app_id = { optional = true, example = "123456789", explanation = "Doubao TTS App ID from Volcengine console (https://console.volcengine.com/speech/app)" }
-doubao_access_key = { optional = true, example = "your-access-key", explanation = "Doubao TTS Access Token from Volcengine console" }
+doubao_app_id = { optional = false, example = "123456789", explanation = "Doubao TTS App ID from Volcengine console (https://console.volcengine.com/speech/app)" }
+doubao_access_token = { optional = false, example = "your-access-token", explanation = "Doubao TTS Access Token from Volcengine console" }
 doubao_resource_id = { optional = true, default = "seed-tts-2.0", example = "seed-tts-2.0", explanation = "Doubao TTS resource ID. Options: seed-tts-1.0 (字符版), seed-tts-1.0-concurr (并发版), seed-tts-2.0", options = ["seed-tts-1.0", "seed-tts-1.0-concurr", "seed-tts-2.0"] }
-doubao_speaker = { optional = true, default = "zh_female_shuangkuaisisi_uranus_bigtts", example = "zh_female_shuangkuaisisi_uranus_bigtts", explanation = "Doubao TTS speaker voice name (use _uranus_bigtts suffix for seed-tts-2.0). See: https://www.volcengine.com/docs/6561/1257544" }
+doubao_speaker = { optional = true, default = "zh_female_xiaohe_uranus_bigtts", example = "zh_female_xiaohe_uranus_bigtts", explanation = "Doubao TTS speaker voice name. See: https://www.volcengine.com/docs/6561/1257544" }
 
 [settings.translation]
 translation_enabled = { optional = true, type = "bool", default = true, example = true, options = [true, false], explanation = "Whether to enable LLM translation of Reddit content to Chinese" }

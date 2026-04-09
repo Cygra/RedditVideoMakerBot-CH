@@ -8,11 +8,17 @@ import requests
 from utils import settings
 
 
-# Common Chinese TTS voices for Doubao seed-tts-2.0
+# Chinese and English TTS voices for Doubao
 DOUBAO_VOICES = (
-    "zh_female_shuangkuaisisi_uranus_bigtts",  # 爽快思思 2.0
-    "zh_female_peiqi_uranus_bigtts",            # 佩奇猪 2.0
-    "zh_male_shaonianzixin_uranus_bigtts",      # 少年梓辛/Brayan 2.0
+    "saturn_zh_female_cancan_tob",        # 知性灿灿（角色扮演）
+    "saturn_zh_female_keainvsheng_tob",   # 可爱女生（角色扮演）
+    "saturn_zh_female_tiaopigongzhu_tob", # 调皮公主（角色扮演）
+    "saturn_zh_male_shuanglangshaonian_tob", # 爽朗少年（角色扮演）
+    "saturn_zh_male_tiancaitongzhuo_tob", # 天才同桌（角色扮演）
+    "zh_female_xiaohe_uranus_bigtts",     # 小何（通用场景）
+    "zh_male_m191_uranus_bigtts",         # 云舟（通用场景）
+    "zh_male_taocheng_uranus_bigtts",     # 小天（通用场景）
+    "en_male_tim_uranus_bigtts",          # Tim（通用场景，英文）
 )
 
 
@@ -24,9 +30,9 @@ class DoubaoTTS:
 
     Configuration required in config.toml under [settings.tts]:
         - doubao_app_id: App ID from Volcengine console
-        - doubao_access_key: Access token from Volcengine console
+        - doubao_access_token: Access token from Volcengine console
         - doubao_resource_id: Resource ID (default: seed-tts-2.0)
-        - doubao_speaker: Speaker voice name (use _uranus_bigtts suffix for seed-tts-2.0)
+        - doubao_speaker: Speaker voice name
     """
 
     def __init__(self):
@@ -34,10 +40,10 @@ class DoubaoTTS:
 
         tts_config = settings.config["settings"]["tts"]
         self.app_id = tts_config.get("doubao_app_id", "")
-        self.access_key = tts_config.get("doubao_access_key", "")
+        self.access_token = tts_config.get("doubao_access_token", "")
         self.resource_id = tts_config.get("doubao_resource_id", "seed-tts-2.0")
         self.speaker = tts_config.get(
-            "doubao_speaker", "zh_female_shuangkuaisisi_uranus_bigtts"
+            "doubao_speaker", "zh_female_xiaohe_uranus_bigtts"
         )
 
         if not self.app_id:
@@ -46,9 +52,9 @@ class DoubaoTTS:
                 "Please configure it in [settings.tts] of config.toml. "
                 "Get it from: https://console.volcengine.com/speech/app"
             )
-        if not self.access_key:
+        if not self.access_token:
             raise ValueError(
-                "Doubao TTS requires 'doubao_access_key'. "
+                "Doubao TTS requires 'doubao_access_token'. "
                 "Please configure it in [settings.tts] of config.toml. "
                 "Get it from: https://console.volcengine.com/speech/app"
             )
@@ -70,7 +76,7 @@ class DoubaoTTS:
 
         headers = {
             "X-Api-App-Id": self.app_id,
-            "X-Api-Access-Key": self.access_key,
+            "X-Api-Access-Key": self.access_token,
             "X-Api-Resource-Id": self.resource_id,
             "X-Api-Request-Id": str(uuid.uuid4()),
             "Content-Type": "application/json",
@@ -127,7 +133,7 @@ class DoubaoTTS:
             if not audio_data:
                 raise RuntimeError(
                     "Doubao TTS returned no audio data. "
-                    "Check your app_id, access_key, and speaker configuration."
+                    "Check your app_id, access_token, and speaker configuration."
                 )
 
             with open(filepath, "wb") as f:

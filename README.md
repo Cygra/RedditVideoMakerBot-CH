@@ -313,9 +313,9 @@ llm_model = "gpt-4o-mini"                        # 使用的模型
 ```toml
 [settings.tts]
 doubao_app_id = "123456789"                              # 豆包应用 ID
-doubao_access_key = "your-access-key"                    # 豆包访问密钥
+doubao_access_token = "your-access-token"                 # 豆包访问令牌
 doubao_resource_id = "seed-tts-2.0"                     # 资源 ID
-doubao_speaker = "zh_female_shuangkuaisisi_uranus_bigtts" # 说话人音色
+doubao_speaker = "zh_female_xiaohe_uranus_bigtts"        # 说话人音色
 random_voice = false                                     # 是否每条评论随机切换音色
 silence_duration = 0.3                                   # 每段语音之间的静音时长（秒）
 no_emojis = false                                        # 是否去除文本中的 emoji
@@ -337,11 +337,17 @@ no_emojis = false                                        # 是否去除文本中
 
 **内置随机音色池（seed-tts-2.0，启用 random_voice 时随机选取）：**
 
-| 音色名称 | 特点 |
-|----------|------|
-| `zh_female_shuangkuaisisi_uranus_bigtts` | 女声·爽快思思 2.0 |
-| `zh_female_peiqi_uranus_bigtts` | 女声·佩奇猪 2.0 |
-| `zh_male_shaonianzixin_uranus_bigtts` | 男声·少年梓辛/Brayan 2.0 |
+| 音色名称 | 说话人 | 场景 |
+|----------|--------|------|
+| `saturn_zh_female_cancan_tob` | 知性灿灿 | 角色扮演 |
+| `saturn_zh_female_keainvsheng_tob` | 可爱女生 | 角色扮演 |
+| `saturn_zh_female_tiaopigongzhu_tob` | 调皮公主 | 角色扮演 |
+| `saturn_zh_male_shuanglangshaonian_tob` | 爽朗少年 | 角色扮演 |
+| `saturn_zh_male_tiancaitongzhuo_tob` | 天才同桌 | 角色扮演 |
+| `zh_female_xiaohe_uranus_bigtts` | 小何 | 通用场景 |
+| `zh_male_m191_uranus_bigtts` | 云舟 | 通用场景 |
+| `zh_male_taocheng_uranus_bigtts` | 小天 | 通用场景 |
+| `en_male_tim_uranus_bigtts` | Tim | 通用场景（英文）|
 
 更多音色请参考 [火山引擎音色列表](https://www.volcengine.com/docs/6561/1257544)。
 
@@ -413,9 +419,9 @@ background_thumbnail_font_color = "255,255,255"
 
 [settings.tts]
 doubao_app_id = "你的AppID"
-doubao_access_key = "你的AccessKey"
+doubao_access_token = "你的AccessToken"
 doubao_resource_id = "seed-tts-2.0"
-doubao_speaker = "zh_female_shuangkuaisisi_uranus_bigtts"
+doubao_speaker = "zh_female_xiaohe_uranus_bigtts"
 random_voice = false
 silence_duration = 0.3
 no_emojis = false
