@@ -16,7 +16,7 @@ _HEADERS = {
 }
 
 
-def _fetch_subreddit_posts(subreddit_name: str, sort: str = "hot", limit: int = 25, time_filter: str = None) -> list:
+def _fetch_subreddit_posts(subreddit_name: str, sort: str = "hot", limit: int = 25, time_filter: str = None, page=None) -> list:
     """Fetch posts from a subreddit using the public JSON API.
 
     Args:
@@ -24,17 +24,27 @@ def _fetch_subreddit_posts(subreddit_name: str, sort: str = "hot", limit: int = 
         sort: Sort order ('hot', 'top', 'new').
         limit: Maximum number of posts to return.
         time_filter: Time filter for 'top' sort ('day', 'week', 'month', 'year', 'all').
+        page: Optional Playwright ``Page`` whose context is already logged in to Reddit.
 
     Returns:
         List of post data dicts.
     """
     url = f"https://www.reddit.com/r/{subreddit_name}/{sort}.json"
-    params = {"limit": limit}
+    params = {"limit": str(limit)}
     if sort == "top" and time_filter:
         params["t"] = time_filter
-    resp = requests.get(url, headers=_HEADERS, params=params, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
+    if page is not None:
+        response = page.request.get(url, params=params)
+        if response.status == 403:
+            print_substep("收到 Reddit 403 错误，可能是偶发限流，请稍后重试。", style="red")
+            raise RuntimeError(f"Reddit 返回 403，请求 URL: {url}")
+        data = response.json()
+    else:
+        resp = requests.get(url, headers=_HEADERS, params=params, timeout=30)
+        if resp.status_code == 403:
+            print_substep("收到 Reddit 403 错误，可能是偶发限流，请稍后重试。", style="red")
+        resp.raise_for_status()
+        data = resp.json()
     return [child["data"] for child in data["data"]["children"]]
 
 
@@ -59,9 +69,14 @@ def _fetch_post_and_comments(post_id: str, comment_limit: int = 100, page=None) 
     params = {"limit": str(comment_limit)}
     if page is not None:
         response = page.request.get(url, params=params)
+        if response.status == 403:
+            print_substep("收到 Reddit 403 错误，可能是偶发限流，请稍后重试。", style="red")
+            raise RuntimeError(f"Reddit 返回 403，请求 URL: {url}")
         data = response.json()
     else:
         resp = requests.get(url, headers=_HEADERS, params={"limit": comment_limit}, timeout=30)
+        if resp.status_code == 403:
+            print_substep("收到 Reddit 403 错误，可能是偶发限流，请稍后重试。", style="red")
         resp.raise_for_status()
         data = resp.json()
 
@@ -191,14 +206,14 @@ def get_subreddit_threads(POST_ID: str, page=None):
             settings.config["reddit"]["thread"]["post_id"], page=page
         )
     elif settings.config["ai"]["ai_similarity_enabled"]:  # ai sorting via LLM
-        threads = _fetch_subreddit_posts(subreddit_name, sort="hot", limit=50)
+        threads = _fetch_subreddit_posts(subreddit_name, sort="hot", limit=50, page=page)
         keywords = settings.config["ai"]["ai_similarity_keywords"].split(",")
         keywords = [keyword.strip() for keyword in keywords]
         keywords_print = ", ".join(keywords)
         print(f"Sorting threads by similarity to the given keywords: {keywords_print}")
         submission = _select_best_thread_via_llm(threads, keywords, subreddit_name)
     else:
-        threads = _fetch_subreddit_posts(subreddit_name, sort="hot", limit=25)
+        threads = _fetch_subreddit_posts(subreddit_name, sort="hot", limit=25, page=page)
         submission = get_subreddit_undone(threads, subreddit_name)
 
     if submission is None:
