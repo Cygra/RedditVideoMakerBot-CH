@@ -1,4 +1,5 @@
 import re
+import time
 
 import requests
 
@@ -33,19 +34,30 @@ def _fetch_subreddit_posts(subreddit_name: str, sort: str = "hot", limit: int = 
     params = {"limit": str(limit)}
     if sort == "top" and time_filter:
         params["t"] = time_filter
-    if page is not None:
-        response = page.request.get(url, params=params)
-        if response.status == 403:
-            print_substep("收到 Reddit 403 错误，可能是偶发限流，请稍后重试。", style="red")
-            raise RuntimeError(f"Reddit 返回 403，请求 URL: {url}")
-        data = response.json()
-    else:
-        resp = requests.get(url, headers=_HEADERS, params=params, timeout=30)
-        if resp.status_code == 403:
-            print_substep("收到 Reddit 403 错误，可能是偶发限流，请稍后重试。", style="red")
-        resp.raise_for_status()
-        data = resp.json()
-    return [child["data"] for child in data["data"]["children"]]
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        if page is not None:
+            response = page.request.get(url, params=params)
+            if response.status == 403:
+                if attempt < max_retries:
+                    print_substep(f"收到 Reddit 403 错误，10s 后重试（第 {attempt}/{max_retries} 次）...", style="yellow")
+                    time.sleep(10)
+                    continue
+                print_substep("收到 Reddit 403 错误，已达最大重试次数。", style="red")
+                raise RuntimeError(f"Reddit 返回 403，请求 URL: {url}")
+            data = response.json()
+        else:
+            resp = requests.get(url, headers=_HEADERS, params=params, timeout=30)
+            if resp.status_code == 403:
+                if attempt < max_retries:
+                    print_substep(f"收到 Reddit 403 错误，10s 后重试（第 {attempt}/{max_retries} 次）...", style="yellow")
+                    time.sleep(10)
+                    continue
+                print_substep("收到 Reddit 403 错误，已达最大重试次数。", style="red")
+            resp.raise_for_status()
+            data = resp.json()
+        return [child["data"] for child in data["data"]["children"]]
+    return []
 
 
 def _fetch_post_and_comments(post_id: str, comment_limit: int = 100, page=None) -> tuple:
@@ -67,26 +79,36 @@ def _fetch_post_and_comments(post_id: str, comment_limit: int = 100, page=None) 
     """
     url = f"https://www.reddit.com/comments/{post_id}.json"
     params = {"limit": str(comment_limit)}
-    if page is not None:
-        response = page.request.get(url, params=params)
-        if response.status == 403:
-            print_substep("收到 Reddit 403 错误，可能是偶发限流，请稍后重试。", style="red")
-            raise RuntimeError(f"Reddit 返回 403，请求 URL: {url}")
-        data = response.json()
-    else:
-        resp = requests.get(url, headers=_HEADERS, params={"limit": comment_limit}, timeout=30)
-        if resp.status_code == 403:
-            print_substep("收到 Reddit 403 错误，可能是偶发限流，请稍后重试。", style="red")
-        resp.raise_for_status()
-        data = resp.json()
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        if page is not None:
+            response = page.request.get(url, params=params)
+            if response.status == 403:
+                if attempt < max_retries:
+                    print_substep(f"收到 Reddit 403 错误，10s 后重试（第 {attempt}/{max_retries} 次）...", style="yellow")
+                    time.sleep(10)
+                    continue
+                print_substep("收到 Reddit 403 错误，已达最大重试次数。", style="red")
+                raise RuntimeError(f"Reddit 返回 403，请求 URL: {url}")
+            data = response.json()
+        else:
+            resp = requests.get(url, headers=_HEADERS, params={"limit": comment_limit}, timeout=30)
+            if resp.status_code == 403:
+                if attempt < max_retries:
+                    print_substep(f"收到 Reddit 403 错误，10s 后重试（第 {attempt}/{max_retries} 次）...", style="yellow")
+                    time.sleep(10)
+                    continue
+                print_substep("收到 Reddit 403 错误，已达最大重试次数。", style="red")
+            resp.raise_for_status()
+            data = resp.json()
 
-    post = data[0]["data"]["children"][0]["data"]
-
-    comments = []
-    for child in data[1]["data"]["children"]:
-        if child["kind"] == "t1":
-            comments.append(child["data"])
-    return post, comments
+        post = data[0]["data"]["children"][0]["data"]
+        comments = []
+        for child in data[1]["data"]["children"]:
+            if child["kind"] == "t1":
+                comments.append(child["data"])
+        return post, comments
+    return None, []
 
 
 def _select_best_thread_via_llm(threads: list, keywords: list, subreddit_name: str):
