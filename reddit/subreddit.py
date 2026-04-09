@@ -128,8 +128,7 @@ def _select_best_thread_via_llm(threads: list, keywords: list, subreddit_name: s
         data = resp.json()
         answer = data["choices"][0]["message"]["content"].strip()
         # Extract the first integer from the response
-        import re as _re
-        match = _re.search(r"\d+", answer)
+        match = re.search(r"\d+", answer)
         if match:
             idx = int(match.group()) - 1  # 1-indexed -> 0-indexed
             if 0 <= idx < len(threads):

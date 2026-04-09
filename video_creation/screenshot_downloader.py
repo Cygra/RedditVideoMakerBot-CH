@@ -59,9 +59,6 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int):
         txtcolor = (0, 0, 0)
         transparent = False
 
-    if storymode and settings.config["settings"]["theme"] == "transparent":
-        print_substep("Generating transparent storymode images is not supported via screenshot. Skipping screenshots for story content.")
-
     screenshot_num: int
     with sync_playwright() as p:
         print_substep("Launching Headless Browser...")
