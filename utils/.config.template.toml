@@ -54,4 +54,4 @@ doubao_speaker = { optional = true, default = "zh_female_xiaohe_uranus_bigtts", 
 translation_enabled = { optional = true, type = "bool", default = true, example = true, options = [true, false], explanation = "Whether to enable LLM translation of Reddit content to Chinese" }
 llm_api_url = { optional = true, default = "https://api.openai.com/v1", example = "https://api.openai.com/v1", explanation = "The API endpoint URL for LLM translation (OpenAI-compatible chat completions)" }
 llm_api_key = { optional = true, example = "sk-abc123def456...", explanation = "Your API key for the LLM translation service" }
-llm_model = { optional = true, default = "gpt-4o-mini", example = "gpt-4o-mini", explanation = "The model to use for translation", options = ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"] }
+llm_model = { optional = true, default = "gpt-4o-mini", example = "gpt-4o-mini", explanation = "The model to use for translation (e.g. gpt-4o-mini, gpt-4o, deepseek-chat, qwen-plus, etc.)" }
