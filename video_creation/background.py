@@ -130,7 +130,7 @@ def chop_background(background_config: Dict[str, Tuple], video_length: int, redd
     """
     thread_id = re.sub(r"[^\w\s-]", "", reddit_object["thread_id"])
 
-    if settings.config["settings"]["background"][f"background_audio_volume"] == 0:
+    if settings.config["settings"]["background"]["background_audio_volume"] == 0:
         print_step("Volume was set to 0. Skipping background audio creation . . .")
     else:
         print_step("Finding a spot in the backgrounds audio to chop...✂️")

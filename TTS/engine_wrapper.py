@@ -8,6 +8,8 @@ from moviepy import AudioFileClip
 from moviepy.audio.AudioClip import AudioClip
 from moviepy.audio.fx import MultiplyVolume
 
+from rich.progress import track
+
 from utils import settings
 from utils.console import print_step, print_substep
 from utils.voice import sanitize_text
@@ -141,7 +143,7 @@ class TTSEngine:
                     for idz in range(0, len(split_text)):
                         f.write("file " + f"'{idx}-{idz}.part.mp3'" + "\n")
                     split_files.append(str(f"{self.path}/{idx}-{idy}.part.mp3"))
-                    f.write("file " + f"'silence.mp3'" + "\n")
+                    f.write("file " + "'silence.mp3'" + "\n")
 
                 os.system(
                     "ffmpeg -f concat -y -hide_banner -loglevel panic -safe 0 "

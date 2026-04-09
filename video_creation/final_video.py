@@ -16,7 +16,6 @@ from rich.console import Console
 from utils import settings
 from utils.cleanup import cleanup
 from utils.console import print_step, print_substep
-from utils.fonts import getheight
 from utils.id import extract_id
 from utils.thumbnail import create_thumbnail
 from utils.videos import save_data
@@ -383,8 +382,8 @@ def make_final_video(
     background_clip = ffmpeg.drawtext(
         background_clip,
         text=text,
-        x=f"(w-text_w)",
-        y=f"(h-text_h)",
+        x="(w-text_w)",
+        y="(h-text_h)",
         fontsize=5,
         fontcolor="White",
         fontfile=os.path.join("fonts", "Roboto-Regular.ttf"),

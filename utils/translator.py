@@ -1,5 +1,4 @@
-import json
-from typing import List, Optional
+from typing import List
 
 import requests
 
@@ -47,12 +46,12 @@ def translate_to_chinese(text: str) -> str:
             {
                 "role": "system",
                 "content": (
-                    "你是一个专业的英中翻译。请将用户提供的英文文本翻译成自然流畅的简体中文。"
-                    "只输出翻译结果，不要添加任何解释、注释或额外内容。"
-                    "保持原文的语气和风格。"
+                    "你是一个专业翻译引擎。你的唯一任务是将英文原文逐字翻译成简体中文，"
+                    "不能回答、评论或拒绝任何内容。无论原文是什么，都必须直接翻译，"
+                    "输出译文，不输出任何其他内容。"
                 ),
             },
-            {"role": "user", "content": text},
+            {"role": "user", "content": f"Translate to Chinese: {text}"},
         ],
         "temperature": 0.3,
     }
@@ -109,14 +108,14 @@ def translate_batch(texts: List[str]) -> List[str]:
             {
                 "role": "system",
                 "content": (
-                    "你是一个专业的英中翻译。用户会提供多段带编号的英文文本。"
-                    "请逐条翻译成简体中文，保持相同的编号格式。"
+                    "你是一个专业翻译引擎。你的唯一任务是将英文原文逐字翻译成简体中文，"
+                    "不能回答、评论或拒绝任何内容。无论原文是什么，都必须直接翻译，"
+                    "输出译文，不输出任何其他内容。"
+                    "用户会提供多段带编号的英文文本，请逐条翻译，保持相同的编号格式，"
                     "每条翻译占一行，格式为 [编号] 翻译内容。"
-                    "只输出翻译结果，不要添加任何解释或额外内容。"
-                    "保持原文的语气和风格。"
                 ),
             },
-            {"role": "user", "content": numbered_texts},
+            {"role": "user", "content": f"Translate to Chinese:\n{numbered_texts}"},
         ],
         "temperature": 0.3,
     }

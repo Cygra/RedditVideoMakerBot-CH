@@ -1,8 +1,6 @@
 import re
 from typing import Optional
 
-from utils.console import print_substep
-
 
 def extract_id(reddit_obj: dict, field: Optional[str] = "thread_id"):
     """
