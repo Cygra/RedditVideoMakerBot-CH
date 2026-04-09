@@ -62,7 +62,7 @@ openai_model = { optional = false, default = "tts-1", example = "tts-1", explana
 # Doubao (豆包) TTS settings
 doubao_app_id = { optional = true, example = "123456789", explanation = "Doubao TTS App ID from Volcengine console (https://console.volcengine.com/speech/app)" }
 doubao_access_key = { optional = true, example = "your-access-key", explanation = "Doubao TTS Access Token from Volcengine console" }
-doubao_resource_id = { optional = true, default = "seed-tts-1.0", example = "seed-tts-1.0", explanation = "Doubao TTS resource ID. Options: seed-tts-1.0 (字符版), seed-tts-1.0-concurr (并发版), seed-tts-2.0", options = ["seed-tts-1.0", "seed-tts-1.0-concurr", "seed-tts-2.0"] }
+doubao_resource_id = { optional = true, default = "seed-tts-2.0", example = "seed-tts-2.0", explanation = "Doubao TTS resource ID. Options: seed-tts-1.0 (字符版), seed-tts-1.0-concurr (并发版), seed-tts-2.0", options = ["seed-tts-1.0", "seed-tts-1.0-concurr", "seed-tts-2.0"] }
 doubao_speaker = { optional = true, default = "zh_female_shuangkuaisisi_moon_bigtts", example = "zh_female_shuangkuaisisi_moon_bigtts", explanation = "Doubao TTS speaker voice name. See: https://www.volcengine.com/docs/6561/1257544" }
 
 [settings.translation]
