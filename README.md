@@ -315,7 +315,7 @@ llm_model = "gpt-4o-mini"                        # 使用的模型
 doubao_app_id = "123456789"                              # 豆包应用 ID
 doubao_access_key = "your-access-key"                    # 豆包访问密钥
 doubao_resource_id = "seed-tts-2.0"                     # 资源 ID
-doubao_speaker = "zh_female_shuangkuaisisi_moon_bigtts" # 说话人音色
+doubao_speaker = "zh_female_shuangkuaisisi_uranus_bigtts" # 说话人音色
 random_voice = false                                     # 是否每条评论随机切换音色
 silence_duration = 0.3                                   # 每段语音之间的静音时长（秒）
 no_emojis = false                                        # 是否去除文本中的 emoji
@@ -335,15 +335,13 @@ no_emojis = false                                        # 是否去除文本中
 | `seed-tts-1.0-concurr` | 并发版 |
 | `seed-tts-2.0` | 最新版（默认推荐）|
 
-**内置随机音色池（启用 random_voice 时随机选取）：**
+**内置随机音色池（seed-tts-2.0，启用 random_voice 时随机选取）：**
 
 | 音色名称 | 特点 |
 |----------|------|
-| `zh_female_shuangkuaisisi_moon_bigtts` | 女声·爽快思思 |
-| `zh_male_chunhou_moon_bigtts` | 男声·醇厚 |
-| `zh_female_wanwanxiaohe_moon_bigtts` | 女声·弯弯小何 |
-| `zh_male_yangguang_moon_bigtts` | 男声·阳光 |
-| `zh_female_tianmeixiaoyuan_moon_bigtts` | 女声·甜美小媛 |
+| `zh_female_shuangkuaisisi_uranus_bigtts` | 女声·爽快思思 2.0 |
+| `zh_female_peiqi_uranus_bigtts` | 女声·佩奇猪 2.0 |
+| `zh_male_shaonianzixin_uranus_bigtts` | 男声·少年梓辛/Brayan 2.0 |
 
 更多音色请参考 [火山引擎音色列表](https://www.volcengine.com/docs/6561/1257544)。
 
@@ -417,7 +415,7 @@ background_thumbnail_font_color = "255,255,255"
 doubao_app_id = "你的AppID"
 doubao_access_key = "你的AccessKey"
 doubao_resource_id = "seed-tts-2.0"
-doubao_speaker = "zh_female_shuangkuaisisi_moon_bigtts"
+doubao_speaker = "zh_female_shuangkuaisisi_uranus_bigtts"
 random_voice = false
 silence_duration = 0.3
 no_emojis = false

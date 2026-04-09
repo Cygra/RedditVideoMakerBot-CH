@@ -8,13 +8,11 @@ import requests
 from utils import settings
 
 
-# Common Chinese TTS voices for Doubao
+# Common Chinese TTS voices for Doubao seed-tts-2.0
 DOUBAO_VOICES = (
-    "zh_female_shuangkuaisisi_moon_bigtts",  # 爽快思思
-    "zh_male_chunhou_moon_bigtts",  # 醇厚
-    "zh_female_wanwanxiaohe_moon_bigtts",  # 弯弯小何
-    "zh_male_yangguang_moon_bigtts",  # 阳光
-    "zh_female_tianmeixiaoyuan_moon_bigtts",  # 甜美小媛
+    "zh_female_shuangkuaisisi_uranus_bigtts",  # 爽快思思 2.0
+    "zh_female_peiqi_uranus_bigtts",            # 佩奇猪 2.0
+    "zh_male_shaonianzixin_uranus_bigtts",      # 少年梓辛/Brayan 2.0
 )
 
 
@@ -27,8 +25,8 @@ class DoubaoTTS:
     Configuration required in config.toml under [settings.tts]:
         - doubao_app_id: App ID from Volcengine console
         - doubao_access_key: Access token from Volcengine console
-        - doubao_resource_id: Resource ID (default: seed-tts-1.0)
-        - doubao_speaker: Speaker voice name
+        - doubao_resource_id: Resource ID (default: seed-tts-2.0)
+        - doubao_speaker: Speaker voice name (use _uranus_bigtts suffix for seed-tts-2.0)
     """
 
     def __init__(self):
@@ -37,9 +35,9 @@ class DoubaoTTS:
         tts_config = settings.config["settings"]["tts"]
         self.app_id = tts_config.get("doubao_app_id", "")
         self.access_key = tts_config.get("doubao_access_key", "")
-        self.resource_id = tts_config.get("doubao_resource_id", "seed-tts-1.0")
+        self.resource_id = tts_config.get("doubao_resource_id", "seed-tts-2.0")
         self.speaker = tts_config.get(
-            "doubao_speaker", "zh_female_shuangkuaisisi_moon_bigtts"
+            "doubao_speaker", "zh_female_shuangkuaisisi_uranus_bigtts"
         )
 
         if not self.app_id:
