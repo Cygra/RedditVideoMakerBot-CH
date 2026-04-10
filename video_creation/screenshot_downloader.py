@@ -160,6 +160,10 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
                     const el = document.querySelector(`shreddit-comment[thingid="t1_${cid}"]`);
                     if (el) {
                         el.querySelectorAll('shreddit-comment').forEach(r => r.style.display = 'none');
+                        if (el.shadowRoot) {
+                            const children = el.shadowRoot.querySelector('#comment-children');
+                            if (children) children.style.display = 'none';
+                        }
                     }
                 }""",
                 cid,
@@ -191,6 +195,10 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
                         const el = document.querySelector(`shreddit-comment[thingid="t1_${cid}"]`);
                         if (el) {
                             el.querySelectorAll('shreddit-comment').forEach(r => r.style.display = '');
+                            if (el.shadowRoot) {
+                                const children = el.shadowRoot.querySelector('#comment-children');
+                                if (children) children.style.display = '';
+                            }
                         }
                     }""",
                     cid,
@@ -203,6 +211,10 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
                     const el = document.querySelector(`shreddit-comment[thingid="t1_${cid}"]`);
                     if (el) {
                         el.querySelectorAll('shreddit-comment').forEach(r => r.style.display = '');
+                        if (el.shadowRoot) {
+                            const children = el.shadowRoot.querySelector('#comment-children');
+                            if (children) children.style.display = '';
+                        }
                     }
                 }""",
                 cid,

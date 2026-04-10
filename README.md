@@ -215,7 +215,15 @@ zoom = 1.0              # 浏览器缩放比例（0.1～2.0），调大可让截
 allow_nsfw = false      # 是否允许 NSFW 帖子
 channel_name = "Reddit Tales"  # 频道名称，会显示在视频水印处
 times_to_run = 1        # 连续运行次数
+title_screenshot_style = "real"  # 标题截图风格：real（真实截图，默认）/ fancy（生成的精美标题卡）
 ```
+
+**`title_screenshot_style` 说明：**
+
+| 值 | 效果 |
+|----|------|
+| `real`（默认）| 使用 Playwright 从 Reddit 网页截取的真实标题截图，包含原文和中文翻译叠加 |
+| `fancy` | 使用模板图片生成精美标题卡，同时展示英文原文和中文翻译，风格统一 |
 
 **主题说明：**
 
@@ -454,6 +462,7 @@ allow_nsfw = false
 channel_name = "Reddit Tales"
 proxy = ""                         # 代理地址，如 http://127.0.0.1:7897，留空不使用
 times_to_run = 1
+title_screenshot_style = "real"    # real（真实截图，默认）/ fancy（精美标题卡，英文+中文）
 
 [settings.background]
 background_video = "minecraft"          # 背景视频，留空随机
