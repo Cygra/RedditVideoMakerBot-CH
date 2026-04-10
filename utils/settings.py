@@ -103,7 +103,6 @@ def crawl_and_check(obj: dict, path: list, checks: dict = {}, name=""):
 
 
 def check_vars(path, checks):
-    global config
     crawl_and_check(config, path, checks)
 
 

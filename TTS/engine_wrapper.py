@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import Tuple
 
 import numpy as np
-import translators
 from moviepy import AudioFileClip
 from moviepy.audio.AudioClip import AudioClip
 from moviepy.audio.fx import MultiplyVolume
+
 from rich.progress import track
 
 from utils import settings
@@ -79,7 +79,7 @@ class TTSEngine:
 
     def run(self) -> Tuple[int, int]:
         Path(self.path).mkdir(parents=True, exist_ok=True)
-        print_step("Saving Text to MP3 files...")
+        print_step("正在将文本保存为 MP3 文件...")
 
         self.add_periods()
 
@@ -92,23 +92,16 @@ class TTSEngine:
         idx = 0
 
         if settings.config["settings"]["storymode"]:
-            if settings.config["settings"]["storymodemethod"] == 0:
-                post_text = self.reddit_object["thread_post"]
-                post_zh = self.reddit_object.get("thread_post_zh")
-                if self._is_chinese_tts() and post_zh:
-                    tts_text = post_zh if isinstance(post_zh, str) else " ".join(post_zh)
-                else:
-                    tts_text = post_text
-                if len(tts_text) > self.tts_module.max_chars:
-                    self.split_post(tts_text, "postaudio")
-                else:
-                    self.call_tts("postaudio", process_text(tts_text) if not self._is_chinese_tts() else tts_text)
-            elif settings.config["settings"]["storymodemethod"] == 1:
-                posts = self.reddit_object["thread_post"]
-                posts_zh = self.reddit_object.get("thread_post_zh", [])
-                for idx, text in track(enumerate(posts)):
-                    zh = posts_zh[idx] if self._is_chinese_tts() and idx < len(posts_zh) else None
-                    self.call_tts(f"postaudio-{idx}", self._get_text_for_tts(text, zh))
+            post_text = self.reddit_object["thread_post"]
+            post_zh = self.reddit_object.get("thread_post_zh")
+            if self._is_chinese_tts() and post_zh:
+                tts_text = post_zh if isinstance(post_zh, str) else " ".join(post_zh)
+            else:
+                tts_text = post_text
+            if len(tts_text) > self.tts_module.max_chars:
+                self.split_post(tts_text, "postaudio")
+            else:
+                self.call_tts("postaudio", process_text(tts_text) if not self._is_chinese_tts() else tts_text)
 
         else:
             for idx, comment in track(enumerate(self.reddit_object["comments"]), "Saving..."):
@@ -124,7 +117,7 @@ class TTSEngine:
                 else:
                     self.call_tts(f"{idx}", tts_text)
 
-        print_substep("Saved Text to MP3 files successfully.", style="bold green")
+        print_substep("文本已成功保存为 MP3 文件。", style="bold green")
         return self.length, idx
 
     def split_post(self, text: str, idx):
@@ -150,7 +143,7 @@ class TTSEngine:
                     for idz in range(0, len(split_text)):
                         f.write("file " + f"'{idx}-{idz}.part.mp3'" + "\n")
                     split_files.append(str(f"{self.path}/{idx}-{idy}.part.mp3"))
-                    f.write("file " + f"'silence.mp3'" + "\n")
+                    f.write("file " + "'silence.mp3'" + "\n")
 
                 os.system(
                     "ffmpeg -f concat -y -hide_banner -loglevel panic -safe 0 "
@@ -168,18 +161,11 @@ class TTSEngine:
             print("OSError")
 
     def call_tts(self, filename: str, text: str):
-        if settings.config["settings"]["tts"]["voice_choice"] == "googletranslate":
-            # GTTS does not have the argument 'random_voice'
-            self.tts_module.run(
-                text,
-                filepath=f"{self.path}/{filename}.mp3",
-            )
-        else:
-            self.tts_module.run(
-                text,
-                filepath=f"{self.path}/{filename}.mp3",
-                random_voice=settings.config["settings"]["tts"]["random_voice"],
-            )
+        self.tts_module.run(
+            text,
+            filepath=f"{self.path}/{filename}.mp3",
+            random_voice=settings.config["settings"]["tts"]["random_voice"],
+        )
         # try:
         #     self.length += MP3(f"{self.path}/{filename}.mp3").info.length
         # except (MutagenError, HeaderNotFoundError):
@@ -204,10 +190,5 @@ class TTSEngine:
 
 
 def process_text(text: str, clean: bool = True):
-    lang = settings.config["reddit"]["thread"]["post_lang"]
     new_text = sanitize_text(text) if clean else text
-    if lang:
-        print_substep("Translating Text...")
-        translated_text = translators.translate_text(text, translator="google", to_language=lang)
-        new_text = sanitize_text(translated_text)
     return new_text
