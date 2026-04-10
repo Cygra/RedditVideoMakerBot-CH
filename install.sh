@@ -98,8 +98,8 @@ function install_centos(){
 
 function get_the_bot(){ 
     echo "Downloading the bot" 
-    rm -rf RedditVideoMakerBot-master
-    curl -sL https://github.com/elebumm/RedditVideoMakerBot/archive/refs/heads/master.zip -o master.zip
+    rm -rf RedditVideoMakerBot-CH-master
+    curl -sL https://github.com/Cygra/RedditVideoMakerBot-CH/archive/refs/heads/master.zip -o master.zip
     unzip master.zip
     rm -rf master.zip
 } 
@@ -109,7 +109,7 @@ function install_python_dep(){
     # tell the user that the script is going to install the python dependencies
     echo "Installing python dependencies" 
     # cd into the directory
-    cd RedditVideoMakerBot-master
+    cd RedditVideoMakerBot-CH-master
     # install the dependencies
     pip3 install -r requirements.txt 
     # cd out
@@ -121,7 +121,7 @@ function install_playwright(){
     # tell the user that the script is going to install playwright 
     echo "Installing playwright"
     # cd into the directory where the script is downloaded
-    cd RedditVideoMakerBot-master
+    cd RedditVideoMakerBot-CH-master
     # run the install script
     python3 -m playwright install 
     python3 -m playwright install-deps 
@@ -158,7 +158,7 @@ function install_deps(){
     else
         # print an error message and exit
         printf "Your OS is not supported\n Please install python3, pip3 and git manually\n After that, run the script again with the -pb option to install python and playwright dependencies\n If you want to add support for your OS, please open a pull request on github\n
-https://github.com/elebumm/RedditVideoMakerBot"
+https://github.com/Cygra/RedditVideoMakerBot-CH"
         exit 1
     fi
 }
@@ -207,7 +207,7 @@ function install_main(){
         install_playwright
     fi
 
-    DIR="./RedditVideoMakerBot-master"
+    DIR="./RedditVideoMakerBot-CH-master"
     if [ -d "$DIR" ]; then
         printf "\nThe bot is installed, want to run it?"
         # if -y (assume yes) continue 
@@ -223,7 +223,7 @@ function install_main(){
                 exit 1
             fi
         fi
-        cd RedditVideoMakerBot-master
+        cd RedditVideoMakerBot-CH-master
         python3 main.py
     fi
 }
