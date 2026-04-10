@@ -457,7 +457,7 @@ llm_model = "gpt-4o-mini"
 
 ## 视频示例
 
-https://user-images.githubusercontent.com/66544866/173453972-6526e4e6-c6ef-41c5-ab40-5d275e724e7c.mp4
+https://github.com/user-attachments/assets/1654f6a7-aa33-4630-b836-08f13a658fe3
 
 ## 贡献与改进 📈
 
