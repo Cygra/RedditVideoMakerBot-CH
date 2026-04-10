@@ -18,8 +18,8 @@
 ## 前置要求
 
 - Python 3.10、3.11、3.12 或 3.13
-- FFmpeg（需提前安装并加入系统 PATH）
-- 能访问 Reddit 和 YouTube 的网络环境（用于抓取帖子、下载背景素材）
+- FFmpeg（需提前安装并加入系统 PATH，且需支持 `drawtext` 滤镜和包含 `ffprobe`，推荐通过 `brew install ffmpeg-full` 安装）
+- 能访问 Reddit 和 YouTube 的网络环境（用于抓取帖子、下载背景素材）；如在中国大陆使用，需配置 HTTP 代理（见[网络代理](#网络代理)）
 
 ---
 
@@ -254,7 +254,39 @@ background_video = "minecraft"   # 背景视频游戏名称
 
 ---
 
-### FFmpeg 视频编码器
+### 网络代理
+
+如果你在中国大陆或其他无法直接访问 Reddit 和 YouTube 的网络环境中运行本程序，需要配置代理。
+
+```toml
+[settings]
+proxy = "http://127.0.0.1:7897"   # 本地 HTTP 代理地址，留空则不使用代理
+```
+
+**为什么需要代理？**
+
+程序在两个环节需要访问外网：
+1. **获取帖子内容** — 调用 `reddit.com` JSON API 获取帖子和评论
+2. **Playwright 浏览器截图** — 打开 Reddit 网页进行登录和截图
+
+两个环节都会自动读取 `proxy` 配置并应用代理，无需额外设置系统代理。
+
+**如何获取代理地址？**
+
+以常见代理工具为例：
+- **ClashX / ClashX Pro（macOS）**：默认端口通常为 `7890` 或 `7897`，在工具的「通用设置」或菜单栏中可查看
+- **Clash for Windows**：设置 → 端口 → HTTP 代理端口（默认 `7890`）
+- **V2RayX / V2RayU**：查看 HTTP 监听端口（默认通常为 `1087`）
+
+> 配置后可用以下命令验证代理是否生效：
+> ```sh
+> curl --proxy http://127.0.0.1:7897 https://www.reddit.com/ -o /dev/null -w "%{http_code}"
+> # 输出 200 表示代理正常工作
+> ```
+
+---
+
+
 
 ```toml
 [settings.background]
@@ -420,6 +452,7 @@ opacity = 0.9
 zoom = 1.0
 allow_nsfw = false
 channel_name = "Reddit Tales"
+proxy = ""                         # 代理地址，如 http://127.0.0.1:7897，留空不使用
 times_to_run = 1
 
 [settings.background]

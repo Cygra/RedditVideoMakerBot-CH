@@ -140,6 +140,26 @@ def ffmpeg_install():
         )
         print(e)
 
+    # Check ffprobe is available (required for audio duration probing)
+    try:
+        subprocess.run(
+            ["ffprobe", "-version"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except FileNotFoundError:
+        print(
+            "⚠️  未找到 ffprobe！\n"
+            "ffprobe 是 FFmpeg 工具包的一部分，用于检测音视频时长，程序运行必须依赖它。\n"
+            "修复建议（macOS）：\n"
+            "  brew install ffmpeg-full && brew link --overwrite ffmpeg\n"
+            "或者：\n"
+            "  brew link --overwrite ffmpeg   # 如果 ffmpeg 已通过 Homebrew 安装\n"
+            "Linux 用户请通过包管理器安装完整的 ffmpeg 包（如 sudo apt install ffmpeg）。"
+        )
+        exit(1)
+
     # Check if ffmpeg supports the drawtext filter (required for video watermark)
     try:
         result = subprocess.run(
@@ -151,7 +171,9 @@ def ffmpeg_install():
             print(
                 "⚠️  当前安装的 FFmpeg 不支持 drawtext 滤镜！\n"
                 "视频合成阶段需要 drawtext 来添加水印文字。\n"
-                "请重新编译或安装支持 --enable-libfreetype 的 FFmpeg 版本。"
+                "修复建议（macOS）：\n"
+                "  brew install ffmpeg-full && brew link --overwrite ffmpeg\n"
+                "请重新安装支持 --enable-libfreetype 的 FFmpeg 版本。"
             )
             exit(1)
     except Exception:

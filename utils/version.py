@@ -4,16 +4,23 @@ from utils.console import print_step
 
 
 def checkversion(__VERSION__: str):
-    response = requests.get(
-        "https://api.github.com/repos/elebumm/RedditVideoMakerBot/releases/latest"
-    )
-    latestversion = response.json()["tag_name"]
+    try:
+        response = requests.get(
+            "https://api.github.com/repos/Cygra/RedditVideoMakerBot-CH/releases/latest",
+            timeout=10,
+        )
+        data = response.json()
+        latestversion = data.get("tag_name")
+        if not latestversion:
+            return
+    except Exception:
+        return
     if __VERSION__ == latestversion:
         print_step(f"您正在使用最新版本 ({__VERSION__})")
         return True
     elif __VERSION__ < latestversion:
         print_step(
-            f"您正在使用旧版本 ({__VERSION__})。请从 https://github.com/elebumm/RedditVideoMakerBot/releases/latest 下载最新版本 ({latestversion})"
+            f"您正在使用旧版本 ({__VERSION__})。请从 https://github.com/Cygra/RedditVideoMakerBot-CH/releases/latest 下载最新版本 ({latestversion})"
         )
     else:
         print_step(
