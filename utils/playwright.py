@@ -64,8 +64,13 @@ def create_reddit_session(playwright: Playwright, W: int, H: int, theme: str):
         else "./video_creation/data/cookie-light-mode.json"
     )
 
+    proxy_url = settings.config["settings"].get("proxy", "").strip()
+    launch_kwargs = {"headless": False}
+    if proxy_url:
+        launch_kwargs["proxy"] = {"server": proxy_url}
+
     # Run in headed mode so the user can see and interact with the browser when needed.
-    browser: Browser = playwright.chromium.launch(headless=False)
+    browser: Browser = playwright.chromium.launch(**launch_kwargs)
     dsf = (W // 600) + 1
 
     def _make_context(**extra) -> BrowserContext:

@@ -17,6 +17,31 @@ _HEADERS = {
 }
 
 
+def _requests_get(url: str, params: dict = None, page=None) -> requests.Response:
+    """Make an HTTP GET request using the requests library.
+
+    When a Playwright *page* is supplied, cookies are extracted from the
+    browser context and injected into the request so Reddit recognises the
+    authenticated session.  The configured proxy (if any) is always applied.
+    """
+    proxy_url = settings.config["settings"].get("proxy", "").strip()
+    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+
+    cookie_dict = {}
+    if page is not None:
+        for c in page.context.cookies():
+            cookie_dict[c["name"]] = c["value"]
+
+    return requests.get(
+        url,
+        headers=_HEADERS,
+        params=params,
+        cookies=cookie_dict if cookie_dict else None,
+        proxies=proxies,
+        timeout=60,
+    )
+
+
 def _fetch_subreddit_posts(subreddit_name: str, sort: str = "hot", limit: int = 25, time_filter: str = None, page=None) -> list:
     """Fetch posts from a subreddit using the public JSON API.
 
@@ -36,26 +61,16 @@ def _fetch_subreddit_posts(subreddit_name: str, sort: str = "hot", limit: int = 
         params["t"] = time_filter
     max_retries = 3
     for attempt in range(1, max_retries + 1):
-        if page is not None:
-            response = page.request.get(url, params=params)
-            if response.status == 403:
-                if attempt < max_retries:
-                    print_substep(f"收到 Reddit 403 错误，10s 后重试（第 {attempt}/{max_retries} 次）...", style="yellow")
-                    time.sleep(10)
-                    continue
-                print_substep("收到 Reddit 403 错误，已达最大重试次数。", style="red")
-                raise RuntimeError(f"Reddit 返回 403，请求 URL: {url}")
-            data = response.json()
-        else:
-            resp = requests.get(url, headers=_HEADERS, params=params, timeout=30)
-            if resp.status_code == 403:
-                if attempt < max_retries:
-                    print_substep(f"收到 Reddit 403 错误，10s 后重试（第 {attempt}/{max_retries} 次）...", style="yellow")
-                    time.sleep(10)
-                    continue
-                print_substep("收到 Reddit 403 错误，已达最大重试次数。", style="red")
-            resp.raise_for_status()
-            data = resp.json()
+        resp = _requests_get(url, params=params, page=page)
+        if resp.status_code == 403:
+            if attempt < max_retries:
+                print_substep(f"收到 Reddit 403 错误，10s 后重试（第 {attempt}/{max_retries} 次）...", style="yellow")
+                time.sleep(10)
+                continue
+            print_substep("收到 Reddit 403 错误，已达最大重试次数。", style="red")
+            raise RuntimeError(f"Reddit 返回 403，请求 URL: {url}")
+        resp.raise_for_status()
+        data = resp.json()
         return [child["data"] for child in data["data"]["children"]]
     return []
 
@@ -81,26 +96,16 @@ def _fetch_post_and_comments(post_id: str, comment_limit: int = 100, page=None) 
     params = {"limit": str(comment_limit)}
     max_retries = 3
     for attempt in range(1, max_retries + 1):
-        if page is not None:
-            response = page.request.get(url, params=params)
-            if response.status == 403:
-                if attempt < max_retries:
-                    print_substep(f"收到 Reddit 403 错误，10s 后重试（第 {attempt}/{max_retries} 次）...", style="yellow")
-                    time.sleep(10)
-                    continue
-                print_substep("收到 Reddit 403 错误，已达最大重试次数。", style="red")
-                raise RuntimeError(f"Reddit 返回 403，请求 URL: {url}")
-            data = response.json()
-        else:
-            resp = requests.get(url, headers=_HEADERS, params={"limit": comment_limit}, timeout=30)
-            if resp.status_code == 403:
-                if attempt < max_retries:
-                    print_substep(f"收到 Reddit 403 错误，10s 后重试（第 {attempt}/{max_retries} 次）...", style="yellow")
-                    time.sleep(10)
-                    continue
-                print_substep("收到 Reddit 403 错误，已达最大重试次数。", style="red")
-            resp.raise_for_status()
-            data = resp.json()
+        resp = _requests_get(url, params=params, page=page)
+        if resp.status_code == 403:
+            if attempt < max_retries:
+                print_substep(f"收到 Reddit 403 错误，10s 后重试（第 {attempt}/{max_retries} 次）...", style="yellow")
+                time.sleep(10)
+                continue
+            print_substep("收到 Reddit 403 错误，已达最大重试次数。", style="red")
+            raise RuntimeError(f"Reddit 返回 403，请求 URL: {url}")
+        resp.raise_for_status()
+        data = resp.json()
 
         post = data[0]["data"]["children"][0]["data"]
         comments = []
