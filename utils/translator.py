@@ -176,23 +176,23 @@ def translate_reddit_object(reddit_object: dict) -> dict:
     """
     translation_cfg = settings.config.get("settings", {}).get("translation", {})
     if not translation_cfg.get("translation_enabled", True):
-        print_substep("Translation is disabled in config. Skipping.", style="yellow")
+        print_substep("翻译功能已在配置中禁用，跳过。", style="yellow")
         return reddit_object
 
-    print_step("Translating Reddit content to Chinese...")
+    print_step("正在将 Reddit 内容翻译为中文...")
 
     # Translate title
-    print_substep("Translating title...")
+    print_substep("正在翻译标题...")
     reddit_object["thread_title_zh"] = translate_to_chinese(
         reddit_object["thread_title"]
     )
     print_substep(
-        f'Title translated: {reddit_object["thread_title_zh"]}', style="bold green"
+        f'标题翻译完成: {reddit_object["thread_title_zh"]}', style="bold green"
     )
 
     # Translate storymode post content
     if "thread_post" in reddit_object and reddit_object["thread_post"]:
-        print_substep("Translating post content...")
+        print_substep("正在翻译帖子正文...")
         post = reddit_object["thread_post"]
         if isinstance(post, list):
             reddit_object["thread_post_zh"] = translate_batch(post)
@@ -202,7 +202,7 @@ def translate_reddit_object(reddit_object: dict) -> dict:
     # Translate comments
     if "comments" in reddit_object and reddit_object["comments"]:
         comment_texts = [c["comment_body"] for c in reddit_object["comments"]]
-        print_substep(f"Translating {len(comment_texts)} comments...")
+        print_substep(f"正在翻译 {len(comment_texts)} 条评论...")
 
         # Batch translate in groups of 10 to avoid overly long prompts
         batch_size = 10
@@ -215,5 +215,5 @@ def translate_reddit_object(reddit_object: dict) -> dict:
         for i, translation in enumerate(all_translations):
             reddit_object["comments"][i]["comment_body_zh"] = translation
 
-    print_substep("Translation completed successfully!", style="bold green")
+    print_substep("翻译完成！", style="bold green")
     return reddit_object

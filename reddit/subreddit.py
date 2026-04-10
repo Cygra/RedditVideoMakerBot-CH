@@ -139,7 +139,7 @@ def _select_best_thread_via_llm(threads: list, keywords: list, subreddit_name: s
     model = translation_cfg.get("llm_model", "gpt-4o-mini")
 
     if not api_key:
-        print_substep("LLM API key not set – falling back to default ordering.", style="yellow")
+        print_substep("未设置 LLM API Key — 使用默认排序。", style="yellow")
         return get_subreddit_undone(threads, subreddit_name)
 
     if api_url.endswith("/"):
@@ -185,9 +185,9 @@ def _select_best_thread_via_llm(threads: list, keywords: list, subreddit_name: s
                 reordered = [chosen] + [t for i, t in enumerate(threads) if i != idx]
                 return get_subreddit_undone(reordered, subreddit_name)
         # If parsing failed, fall back
-        print_substep("LLM returned unexpected result – falling back to default ordering.", style="yellow")
+        print_substep("LLM 返回了非预期结果 — 使用默认排序。", style="yellow")
     except Exception as e:
-        print_substep(f"LLM similarity selection failed: {e} – falling back.", style="yellow")
+        print_substep(f"LLM 相似度选帖失败: {e} — 使用默认排序。", style="yellow")
 
     return get_subreddit_undone(threads, subreddit_name)
 
@@ -201,7 +201,7 @@ def get_subreddit_threads(POST_ID: str, page=None):
     comments = None
 
     # Ask user for subreddit input
-    print_step("Getting subreddit threads...")
+    print_step("正在获取 subreddit 帖子...")
     if not settings.config["reddit"]["thread"][
         "subreddit"
     ]:  # note to user. you can have multiple subreddits via '+' separated names
@@ -209,10 +209,10 @@ def get_subreddit_threads(POST_ID: str, page=None):
             subreddit_name = re.sub(r"r\/", "", input("What subreddit would you like to pull from? "))
         except ValueError:
             subreddit_name = "askreddit"
-            print_substep("Subreddit not defined. Using AskReddit.")
+            print_substep("未指定 subreddit，使用默认值 AskReddit。")
     else:
         sub = settings.config["reddit"]["thread"]["subreddit"]
-        print_substep(f"Using subreddit: r/{sub} from TOML config")
+        print_substep(f"使用 TOML 配置中的 subreddit: r/{sub}")
         subreddit_name = sub
         if str(subreddit_name).casefold().startswith("r/"):  # removes the r/ from the input
             subreddit_name = subreddit_name[2:]
@@ -242,7 +242,7 @@ def get_subreddit_threads(POST_ID: str, page=None):
         return get_subreddit_threads(POST_ID)  # submission already done. rerun
 
     elif not submission["num_comments"] and settings.config["settings"]["storymode"] == "false":
-        print_substep("No comments found. Skipping.")
+        print_substep("未找到评论，跳过该帖。")
         exit()
 
     submission = check_done(submission)  # double-checking
@@ -252,11 +252,11 @@ def get_subreddit_threads(POST_ID: str, page=None):
     num_comments = submission["num_comments"]
     threadurl = f"https://www.reddit.com{submission['permalink']}"
 
-    print_substep(f"Video will be: {submission['title']} :thumbsup:", style="bold green")
-    print_substep(f"Thread url is: {threadurl} :thumbsup:", style="bold green")
-    print_substep(f"Thread has {upvotes} upvotes", style="bold blue")
-    print_substep(f"Thread has a upvote ratio of {ratio}%", style="bold blue")
-    print_substep(f"Thread has {num_comments} comments", style="bold blue")
+    print_substep(f"即将生成视频: {submission['title']} :thumbsup:", style="bold green")
+    print_substep(f"帖子链接: {threadurl} :thumbsup:", style="bold green")
+    print_substep(f"帖子获得 {upvotes} 个赞", style="bold blue")
+    print_substep(f"帖子点赞率为 {ratio}%", style="bold blue")
+    print_substep(f"帖子有 {num_comments} 条评论", style="bold blue")
 
     content["thread_url"] = threadurl
     content["thread_title"] = submission["title"]
@@ -301,7 +301,7 @@ def get_subreddit_threads(POST_ID: str, page=None):
                             }
                         )
 
-    print_substep("Received subreddit threads Successfully.", style="bold green")
+    print_substep("成功获取 subreddit 帖子。", style="bold green")
 
     # Translate content to Chinese using LLM
     content = translate_reddit_object(content)

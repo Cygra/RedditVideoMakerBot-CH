@@ -38,6 +38,7 @@ background_thumbnail = { optional = true, type = "bool", default = false, exampl
 background_thumbnail_font_family = { optional = true, default = "arial", example = "arial", explanation = "Font family for the thumbnail text" }
 background_thumbnail_font_size = { optional = true, type = "int", default = 96, example = 96, explanation = "Font size in pixels for the thumbnail text" }
 background_thumbnail_font_color = { optional = true, default = "255,255,255", example = "255,255,255", explanation = "Font color in RGB format for the thumbnail text" }
+ffmpeg_encoder = { optional = true, default = "libx264", example = "libx264", options = ["h264_nvenc", "libx264"], explanation = "FFmpeg video encoder: h264_nvenc (needs NVIDIA GPU) or libx264 (CPU, works everywhere)" }
 
 [settings.tts]
 random_voice = { optional = false, type = "bool", default = true, example = true, options = [true, false,], explanation = "Randomizes the voice used for each comment" }

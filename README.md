@@ -254,6 +254,21 @@ background_video = "minecraft"   # 背景视频游戏名称
 
 ---
 
+### FFmpeg 视频编码器
+
+```toml
+[settings.background]
+ffmpeg_encoder = "libx264"   # 默认值，纯 CPU 编码，全平台兼容
+# ffmpeg_encoder = "h264_nvenc"  # 需要 NVIDIA GPU，编码速度更快
+```
+
+| 配置值 | 说明 |
+|--------|------|
+| `libx264` | 纯 CPU 编码，全平台兼容（默认） |
+| `h264_nvenc` | NVIDIA GPU 硬件加速编码，速度更快，需要 NVIDIA 显卡和驱动 |
+
+---
+
 ### 背景音乐
 
 ```toml
@@ -282,6 +297,7 @@ background_thumbnail = false                      # 是否生成封面图
 background_thumbnail_font_family = "arial"       # 封面文字字体（系统字体名，不含 .ttf 后缀）
 background_thumbnail_font_size = 96              # 封面文字大小（像素）
 background_thumbnail_font_color = "255,255,255" # 封面文字颜色（RGB）
+ffmpeg_encoder = "libx264"                   # 视频编码器：h264_nvenc（需 NVIDIA GPU）或 libx264（纯 CPU，默认）
 ```
 
 启用后需在 `assets/backgrounds/` 目录放置一张 `thumbnail.png` 作为封面背景，程序会在上面叠加帖子标题，生成封面图并保存到 `assets/temp/<id>/thumbnail.png`。
@@ -347,7 +363,6 @@ no_emojis = false                                        # 是否去除文本中
 | `zh_female_xiaohe_uranus_bigtts` | 小何 | 通用场景 |
 | `zh_male_m191_uranus_bigtts` | 云舟 | 通用场景 |
 | `zh_male_taocheng_uranus_bigtts` | 小天 | 通用场景 |
-| `en_male_tim_uranus_bigtts` | Tim | 通用场景（英文）|
 
 更多音色请参考 [火山引擎音色列表](https://www.volcengine.com/docs/6561/1257544)。
 

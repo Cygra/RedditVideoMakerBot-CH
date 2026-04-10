@@ -18,7 +18,6 @@ DOUBAO_VOICES = (
     "zh_female_xiaohe_uranus_bigtts",     # 小何（通用场景）
     "zh_male_m191_uranus_bigtts",         # 云舟（通用场景）
     "zh_male_taocheng_uranus_bigtts",     # 小天（通用场景）
-    "en_male_tim_uranus_bigtts",          # Tim（通用场景，英文）
 )
 
 

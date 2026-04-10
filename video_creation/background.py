@@ -62,7 +62,7 @@ def get_background_config(mode: str):
     try:
         choice = str(settings.config["settings"]["background"][f"background_{mode}"]).casefold()
     except AttributeError:
-        print_substep("No background selected. Picking random background'")
+        print_substep("未选择背景，将随机选取。")
         choice = None
 
     # Handle default / not supported background using default option.
@@ -81,10 +81,10 @@ def download_background_video(background_config: Tuple[str, str, str, Any]):
     if Path(f"assets/backgrounds/video/{credit}-{filename}").is_file():
         return
     print_step(
-        "We need to download the backgrounds videos. they are fairly large but it's only done once. 😎"
+        "需要下载背景视频，文件较大但只需下载一次。😎"
     )
-    print_substep("Downloading the backgrounds videos... please be patient 🙏 ")
-    print_substep(f"Downloading {filename} from {uri}")
+    print_substep("正在下载背景视频，请耐心等待 🙏 ")
+    print_substep(f"正在从 {uri} 下载 {filename}")
     ydl_opts = {
         "format": "bestvideo[height<=1080][ext=mp4]",
         "outtmpl": f"assets/backgrounds/video/{credit}-{filename}",
@@ -93,7 +93,7 @@ def download_background_video(background_config: Tuple[str, str, str, Any]):
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download(uri)
-    print_substep("Background video downloaded successfully! 🎉", style="bold green")
+    print_substep("背景视频下载完成！🎉", style="bold green")
 
 
 def download_background_audio(background_config: Tuple[str, str, str]):
@@ -104,10 +104,10 @@ def download_background_audio(background_config: Tuple[str, str, str]):
     if Path(f"assets/backgrounds/audio/{credit}-{filename}").is_file():
         return
     print_step(
-        "We need to download the backgrounds audio. they are fairly large but it's only done once. 😎"
+        "需要下载背景音乐，文件较大但只需下载一次。😎"
     )
-    print_substep("Downloading the backgrounds audio... please be patient 🙏 ")
-    print_substep(f"Downloading {filename} from {uri}")
+    print_substep("正在下载背景音乐，请耐心等待 🙏 ")
+    print_substep(f"正在从 {uri} 下载 {filename}")
     ydl_opts = {
         "outtmpl": f"./assets/backgrounds/audio/{credit}-{filename}",
         "format": "bestaudio/best",
@@ -117,7 +117,7 @@ def download_background_audio(background_config: Tuple[str, str, str]):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([uri])
 
-    print_substep("Background audio downloaded successfully! 🎉", style="bold green")
+    print_substep("背景音乐下载完成！🎉", style="bold green")
 
 
 def chop_background(background_config: Dict[str, Tuple], video_length: int, reddit_object: dict):
@@ -131,9 +131,9 @@ def chop_background(background_config: Dict[str, Tuple], video_length: int, redd
     thread_id = re.sub(r"[^\w\s-]", "", reddit_object["thread_id"])
 
     if settings.config["settings"]["background"]["background_audio_volume"] == 0:
-        print_step("Volume was set to 0. Skipping background audio creation . . .")
+        print_step("音量设为 0，跳过背景音乐创建...")
     else:
-        print_step("Finding a spot in the backgrounds audio to chop...✂️")
+        print_step("正在从背景音乐中截取片段...✂️")
         audio_choice = f"{background_config['audio'][2]}-{background_config['audio'][1]}"
         background_audio = AudioFileClip(f"assets/backgrounds/audio/{audio_choice}")
         start_time_audio, end_time_audio = get_start_and_end_times(
@@ -142,7 +142,7 @@ def chop_background(background_config: Dict[str, Tuple], video_length: int, redd
         background_audio = background_audio.subclipped(start_time_audio, end_time_audio)
         background_audio.write_audiofile(f"assets/temp/{thread_id}/background.mp3")
 
-    print_step("Finding a spot in the backgrounds video to chop...✂️")
+    print_step("正在从背景视频中截取片段...✂️")
     video_choice = f"{background_config['video'][2]}-{background_config['video'][1]}"
     background_video = VideoFileClip(f"assets/backgrounds/video/{video_choice}")
     start_time_video, end_time_video = get_start_and_end_times(
@@ -155,14 +155,14 @@ def chop_background(background_config: Dict[str, Tuple], video_length: int, redd
             new.write_videofile(f"assets/temp/{thread_id}/background.mp4")
 
     except (OSError, IOError):  # ffmpeg issue see #348
-        print_substep("FFMPEG issue. Trying again...")
+        print_substep("FFmpeg 出现问题，正在重试...")
         ffmpeg_extract_subclip(
             f"assets/backgrounds/video/{video_choice}",
             start_time_video,
             end_time_video,
             outputfile=f"assets/temp/{thread_id}/background.mp4",
         )
-    print_substep("Background video chopped successfully!", style="bold green")
+    print_substep("背景视频截取完成！", style="bold green")
     return background_config["video"][2]
 
 

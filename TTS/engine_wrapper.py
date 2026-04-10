@@ -79,7 +79,7 @@ class TTSEngine:
 
     def run(self) -> Tuple[int, int]:
         Path(self.path).mkdir(parents=True, exist_ok=True)
-        print_step("Saving Text to MP3 files...")
+        print_step("正在将文本保存为 MP3 文件...")
 
         self.add_periods()
 
@@ -117,7 +117,7 @@ class TTSEngine:
                 else:
                     self.call_tts(f"{idx}", tts_text)
 
-        print_substep("Saved Text to MP3 files successfully.", style="bold green")
+        print_substep("文本已成功保存为 MP3 文件。", style="bold green")
         return self.length, idx
 
     def split_post(self, text: str, idx):

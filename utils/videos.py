@@ -23,10 +23,10 @@ def check_done(
         if video["id"] == redditobj["id"]:
             if settings.config["reddit"]["thread"]["post_id"]:
                 print_step(
-                    "You already have done this video but since it was declared specifically in the config file the program will continue"
+                    "该视频之前已生成过，但由于在配置文件中明确指定了帖子 ID，程序将继续处理"
                 )
                 return redditobj
-            print_step("Getting new post as the current one has already been done")
+            print_step("当前帖子已处理过，正在获取新帖子")
             return None
     return redditobj
 

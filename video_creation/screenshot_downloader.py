@@ -35,7 +35,7 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
     translation_cfg = settings.config.get("settings", {}).get("translation", {})
     chinese_overlay: Final[bool] = translation_cfg.get("screenshot_chinese_overlay", True)
 
-    print_step("Downloading screenshots of reddit posts...")
+    print_step("正在下载 Reddit 帖子截图...")
     reddit_id = re.sub(r"[^\w\s-]", "", reddit_object["thread_id"])
     # ! Make sure the reddit screenshots folder exists
     Path(f"assets/temp/{reddit_id}/png").mkdir(parents=True, exist_ok=True)
@@ -50,7 +50,7 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
     try:
         nsfw_btn = page.locator("button:has-text('Yes')", has=page.locator("text=Are you sure"))
         if nsfw_btn.first.is_visible(timeout=2000):
-            print_substep("Post is NSFW. You are spicy...")
+            print_substep("检测到 NSFW 帖子，你口味不错...")
             nsfw_btn.first.click()
             page.wait_for_load_state()
     except Exception:
@@ -67,16 +67,15 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
     if chinese_overlay:
         title_zh = reddit_object.get("thread_title_zh")
         if title_zh:
-            print_substep("Appending Chinese translation to title...")
+            print_substep("正在为标题追加中文翻译...")
             page.evaluate(
                 """tl_content => {
                     const el = document.querySelector('h1[slot="title"]');
                     if (el) {
-                        const zhSpan = document.createElement('div');
-                        zhSpan.style.marginTop = '8px';
-                        zhSpan.style.fontSize = '0.9em';
-                        zhSpan.textContent = tl_content;
-                        el.parentNode.insertBefore(zhSpan, el.nextSibling);
+                        const original = el.textContent;
+                        el.innerHTML =
+                            '<div>' + original + '</div>' +
+                            '<div style="margin-top:8px;font-size:0.9em">' + tl_content + '</div>';
                     }
                 }""",
                 title_zh,
@@ -94,7 +93,7 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
         else:
             page.locator(_SEL_POST).screenshot(path=postcontentpath)
     except Exception as e:
-        print_substep("Something went wrong!", style="red")
+        print_substep("截图过程中出现问题！", style="red")
         resp = input(
             "Something went wrong with making the screenshots! Do you want to skip the post? (y/n) "
         )
@@ -102,7 +101,7 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
         if resp.casefold().startswith("y"):
             save_data("", "", "skipped", reddit_id, "")
             print_substep(
-                "The post is successfully skipped! You can now restart the program and this post will skipped.",
+                "该帖子已成功跳过！重新启动程序后将自动跳过此帖。",
                 "green",
             )
 
@@ -154,6 +153,18 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
                         }""",
                         [comment_zh, comment_body_sel],
                     )
+
+            # Hide nested replies before screenshotting
+            page.evaluate(
+                """cid => {
+                    const el = document.querySelector(`shreddit-comment[thingid="t1_${cid}"]`);
+                    if (el) {
+                        el.querySelectorAll('shreddit-comment').forEach(r => r.style.display = 'none');
+                    }
+                }""",
+                cid,
+            )
+
             try:
                 if settings.config["settings"]["zoom"] != 1:
                     zoom = settings.config["settings"]["zoom"]
@@ -174,6 +185,27 @@ def get_screenshots_of_reddit_posts(reddit_object: dict, screenshot_num: int, pa
                 del reddit_object["comments"]
                 screenshot_num += 1
                 print("TimeoutError: Skipping screenshot...")
+                # Restore nested replies before continuing
+                page.evaluate(
+                    """cid => {
+                        const el = document.querySelector(`shreddit-comment[thingid="t1_${cid}"]`);
+                        if (el) {
+                            el.querySelectorAll('shreddit-comment').forEach(r => r.style.display = '');
+                        }
+                    }""",
+                    cid,
+                )
                 continue
 
-    print_substep("Screenshots downloaded Successfully.", style="bold green")
+            # Restore nested replies
+            page.evaluate(
+                """cid => {
+                    const el = document.querySelector(`shreddit-comment[thingid="t1_${cid}"]`);
+                    if (el) {
+                        el.querySelectorAll('shreddit-comment').forEach(r => r.style.display = '');
+                    }
+                }""",
+                cid,
+            )
+
+    print_substep("截图下载完成。", style="bold green")

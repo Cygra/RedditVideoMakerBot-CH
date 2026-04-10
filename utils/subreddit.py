@@ -64,27 +64,27 @@ def get_subreddit_undone(submissions: list, subreddit_name: str, times_checked=0
         if submission["over_18"]:
             try:
                 if not settings.config["settings"]["allow_nsfw"]:
-                    print_substep("NSFW Post Detected. Skipping...")
+                    print_substep("检测到 NSFW 帖子，跳过...")
                     continue
             except AttributeError:
-                print_substep("NSFW settings not defined. Skipping NSFW post...")
+                print_substep("未定义 NSFW 设置，跳过 NSFW 帖子...")
         if submission["stickied"]:
-            print_substep("This post was pinned by moderators. Skipping...")
+            print_substep("该帖子被版主置顶，跳过...")
             continue
         if _contains_blocked_words(submission["title"] + " " + (submission["selftext"] or "")):
-            print_substep("Post contains a blocked word. Skipping...")
+            print_substep("帖子包含屏蔽词，跳过...")
             continue
         if (
             submission["num_comments"] <= int(settings.config["reddit"]["thread"]["min_comments"])
             and not settings.config["settings"]["storymode"]
         ):
             print_substep(
-                f'This post has under the specified minimum of comments ({settings.config["reddit"]["thread"]["min_comments"]}). Skipping...'
+                f'该帖子的评论数低于最低要求（{settings.config["reddit"]["thread"]["min_comments"]}），跳过...'
             )
             continue
         if settings.config["settings"]["storymode"]:
             if not submission["selftext"]:
-                print_substep("You are trying to use story mode on post with no post text")
+                print_substep("您正在对没有正文的帖子使用故事模式")
                 continue
             else:
                 # Check for the length of the post text
@@ -92,7 +92,7 @@ def get_subreddit_undone(submissions: list, subreddit_name: str, times_checked=0
                     settings.config["settings"]["storymode_max_length"] or 2000
                 ):
                     print_substep(
-                        f"Post is too long ({len(submission['selftext'])}), try with a different post. ({settings.config['settings']['storymode_max_length']} character limit)"
+                        f"帖子正文过长（{len(submission['selftext'])} 字符），请换一个帖子。（限制 {settings.config['settings']['storymode_max_length']} 字符）"
                     )
                     continue
                 elif len(submission["selftext"]) < 30:

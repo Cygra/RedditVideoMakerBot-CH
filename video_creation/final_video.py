@@ -75,7 +75,7 @@ def name_normalize(name: str) -> str:
     return name
 
 
-def prepare_background(reddit_id: str, W: int, H: int) -> str:
+def prepare_background(reddit_id: str, W: int, H: int, encoder: str = "libx264") -> str:
     output_path = f"assets/temp/{reddit_id}/background_noaudio.mp4"
     output = (
         ffmpeg.input(f"assets/temp/{reddit_id}/background.mp4")
@@ -84,7 +84,7 @@ def prepare_background(reddit_id: str, W: int, H: int) -> str:
             output_path,
             an=None,
             **{
-                "c:v": "libx264",
+                "c:v": encoder,
                 "b:v": "20M",
                 "b:a": "192k",
                 "threads": multiprocessing.cpu_count(),
@@ -113,7 +113,7 @@ def create_fancy_thumbnail(image, text, text_color, padding, wrap=35):
     """
     It will take the 1px from the middle of the template and will be resized (stretched) vertically to accommodate the extra height needed for the title.
     """
-    print_step(f"Creating fancy thumbnail for: {text}")
+    print_step(f"正在创建精美缩略图: {text}")
     font_title_size = 47
 
     # Use Chinese font if text contains Chinese characters
@@ -212,6 +212,7 @@ def make_final_video(
     H: Final[int] = int(settings.config["settings"]["resolution_h"])
 
     opacity = settings.config["settings"]["opacity"]
+    encoder = settings.config["settings"]["background"].get("ffmpeg_encoder", "libx264")
 
     reddit_id = extract_id(reddit_obj)
 
@@ -220,9 +221,9 @@ def make_final_video(
         and settings.config["settings"]["background"]["background_audio_volume"] != 0
     )
 
-    print_step("Creating the final video 🎥")
+    print_step("正在创建最终视频 🎥")
 
-    background_clip = ffmpeg.input(prepare_background(reddit_id, W=W, H=H))
+    background_clip = ffmpeg.input(prepare_background(reddit_id, W=W, H=H, encoder=encoder))
 
     # Gather all audio clips
     audio_clips = list()
@@ -336,11 +337,11 @@ def make_final_video(
     subreddit = settings.config["reddit"]["thread"]["subreddit"]
 
     if not exists(f"./results/{subreddit}"):
-        print_substep("The 'results' folder could not be found so it was automatically created.")
+        print_substep("未找到 'results' 文件夹，已自动创建。")
         os.makedirs(f"./results/{subreddit}")
 
     if not exists(f"./results/{subreddit}/OnlyTTS") and allowOnlyTTSFolder:
-        print_substep("The 'OnlyTTS' folder could not be found so it was automatically created.")
+        print_substep("未找到 'OnlyTTS' 文件夹，已自动创建。")
         os.makedirs(f"./results/{subreddit}/OnlyTTS")
 
     # create a thumbnail for the video
@@ -349,7 +350,7 @@ def make_final_video(
     if settingsbackground["background_thumbnail"]:
         if not exists(f"./results/{subreddit}/thumbnails"):
             print_substep(
-                "The 'results/thumbnails' folder could not be found so it was automatically created."
+                "未找到 'results/thumbnails' 文件夹，已自动创建。"
             )
             os.makedirs(f"./results/{subreddit}/thumbnails")
         # get the first file with the .png extension from assets/backgrounds and use it as a background for the thumbnail
@@ -358,7 +359,7 @@ def make_final_video(
             None,
         )
         if first_image is None:
-            print_substep("No png files found in assets/backgrounds", "red")
+            print_substep("未在 assets/backgrounds 中找到 png 文件", "red")
 
         else:
             font_family = settingsbackground["background_thumbnail_font_family"]
@@ -376,7 +377,7 @@ def make_final_video(
                 title_thumb,
             )
             thumbnailSave.save(f"./assets/temp/{reddit_id}/thumbnail.png")
-            print_substep(f"Thumbnail - Building Thumbnail in assets/temp/{reddit_id}/thumbnail.png")
+            print_substep(f"缩略图 - 正在 assets/temp/{reddit_id}/thumbnail.png 中生成缩略图")
 
     text = f"Background by {background_config['video'][2]}"
     background_clip = ffmpeg.drawtext(
@@ -389,7 +390,7 @@ def make_final_video(
         fontfile=os.path.join("fonts", "Roboto-Regular.ttf"),
     )
     background_clip = background_clip.filter("scale", W, H)
-    print_step("Rendering the video 🎥")
+    print_step("正在渲染视频 🎥")
     from tqdm import tqdm
 
     pbar = tqdm(total=100, desc="Progress: ", bar_format="{l_bar}{bar}", unit=" %")
@@ -412,7 +413,7 @@ def make_final_video(
                 path,
                 f="mp4",
                 **{
-                    "c:v": "libx264",
+                    "c:v": encoder,
                     "b:v": "20M",
                     "b:a": "192k",
                     "threads": multiprocessing.cpu_count(),
@@ -433,7 +434,7 @@ def make_final_video(
         path = (
             path[:251] + ".mp4"
         )  # Prevent a error by limiting the path length, do not change this.
-        print_step("Rendering the Only TTS Video 🎥")
+        print_step("正在渲染纯 TTS 视频 🎥")
         with ProgressFfmpeg(length, on_update_example) as progress:
             try:
                 ffmpeg.output(
@@ -442,7 +443,7 @@ def make_final_video(
                     path,
                     f="mp4",
                     **{
-                        "c:v": "libx264",
+                        "c:v": encoder,
                         "b:v": "20M",
                         "b:a": "192k",
                         "threads": multiprocessing.cpu_count(),
@@ -461,7 +462,7 @@ def make_final_video(
         pbar.update(100 - old_percentage)
     pbar.close()
     save_data(subreddit, filename + ".mp4", title, idx, background_config["video"][2])
-    print_step("Removing temporary files 🗑")
+    print_step("正在清理临时文件 🗑")
     cleanups = cleanup(reddit_id)
-    print_substep(f"Removed {cleanups} temporary files 🗑")
-    print_step("Done! 🎉 The video is in the results folder 📁")
+    print_substep(f"已清理 {cleanups} 个临时文件 🗑")
+    print_step("完成！🎉 视频已保存到 results 文件夹 📁")

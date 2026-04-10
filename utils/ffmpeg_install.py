@@ -139,4 +139,22 @@ def ffmpeg_install():
             "Welcome fellow traveler! You're one of the few who have made it this far. We have no idea how you got at this error, but we're glad you're here. Please report this error to the developer, and we'll try to fix it as soon as possible. Thank you for your patience!"
         )
         print(e)
+
+    # Check if ffmpeg supports the drawtext filter (required for video watermark)
+    try:
+        result = subprocess.run(
+            ["ffmpeg", "-filters"],
+            capture_output=True,
+            text=True,
+        )
+        if "drawtext" not in result.stdout:
+            print(
+                "⚠️  当前安装的 FFmpeg 不支持 drawtext 滤镜！\n"
+                "视频合成阶段需要 drawtext 来添加水印文字。\n"
+                "请重新编译或安装支持 --enable-libfreetype 的 FFmpeg 版本。"
+            )
+            exit(1)
+    except Exception:
+        pass  # If the check itself fails, don't block startup
+
     return None
