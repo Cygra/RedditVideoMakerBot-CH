@@ -29,6 +29,7 @@ resolution_h = { optional = false, default = 1920, example = 2560, explantation 
 zoom = { optional = true, default = 1, example = 1.1, explanation = "Sets the browser zoom level. Useful if you want the text larger.", type = "float", nmin = 0.1, nmax = 2, oob_error = "The text is really difficult to read at a zoom level higher than 2" }
 channel_name = { optional = true, default = "Reddit Tales", example = "Reddit Stories", explanation = "Sets the channel name for the video" }
 proxy = { optional = true, default = "", example = "http://127.0.0.1:7890", explanation = "HTTP/HTTPS proxy URL for network requests (Playwright browser and Reddit API). Leave empty to disable. Useful if Reddit is blocked in your region." }
+title_screenshot_style = { optional = true, default = "real", example = "fancy", options = ["real", "fancy"], explanation = "Controls the title card in the video. 'real' uses the actual Reddit screenshot (default); 'fancy' generates a styled card from a template, showing both the English original and Chinese translation." }
 
 [settings.background]
 background_video = { optional = true, default = "minecraft", example = "rocket-league", options = ["minecraft", "gta", "rocket-league", "motor-gta", "csgo-surf", "cluster-truck", "minecraft-2","multiversus","fall-guys","steep", ""], explanation = "Sets the background for the video based on game name" }

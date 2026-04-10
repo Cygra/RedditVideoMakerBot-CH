@@ -109,29 +109,41 @@ def get_text_height(draw, text, font, max_width):
     return total_height
 
 
-def create_fancy_thumbnail(image, text, text_color, padding, wrap=35):
+def create_fancy_thumbnail(image, text, text_color, padding, wrap=35, text_zh=None):
     """
-    It will take the 1px from the middle of the template and will be resized (stretched) vertically to accommodate the extra height needed for the title.
+    It will take the 1px from the middle of the template and will be resized (stretched)
+    vertically to accommodate the extra height needed for the title.
+    If text_zh is provided, both the English original and Chinese translation are rendered.
     """
     print_step(f"正在创建精美缩略图: {text}")
     font_title_size = 47
 
-    # Use Chinese font if text contains Chinese characters
-    has_chinese = any('\u4e00' <= ch <= '\u9fff' for ch in text)
-    if has_chinese:
-        font = ImageFont.truetype(os.path.join("fonts", "NotoSansCJKsc-Bold.otf"), font_title_size)
-        wrap = 20  # Chinese characters are wider
-    else:
-        font = ImageFont.truetype(os.path.join("fonts", "Roboto-Bold.ttf"), font_title_size)
-    image_width, image_height = image.size
+    font_en = ImageFont.truetype(os.path.join("fonts", "Roboto-Bold.ttf"), font_title_size)
+    font_zh = ImageFont.truetype(os.path.join("fonts", "NotoSansCJKsc-Bold.otf"), font_title_size)
 
-    # Calculate text height to determine new image height
-    draw = ImageDraw.Draw(image)
-    text_height = get_text_height(draw, text, font, wrap)
-    lines = textwrap.wrap(text, width=wrap)
-    # This is -50 to reduce the empty space at the bottom of the image,
-    # change it as per your requirement if needed otherwise leave it.
-    new_image_height = image_height + text_height + padding * (len(lines) - 1) - 50
+    wrap_en = wrap
+    wrap_zh = 20  # Chinese characters are wider
+
+    image_width, image_height = image.size
+    draw_temp = ImageDraw.Draw(image)
+
+    en_lines = textwrap.wrap(text, width=wrap_en)
+    en_height = sum(get_text_height(draw_temp, line, font_en, wrap_en) for line in en_lines)
+    en_inter = padding * (len(en_lines) - 1)
+
+    if text_zh:
+        zh_lines = textwrap.wrap(text_zh, width=wrap_zh)
+        zh_height = sum(get_text_height(draw_temp, line, font_zh, wrap_zh) for line in zh_lines)
+        zh_inter = padding * (len(zh_lines) - 1)
+        total_text_height = en_height + en_inter + padding * 2 + zh_height + zh_inter
+    else:
+        zh_lines = []
+        zh_height = 0
+        zh_inter = 0
+        total_text_height = en_height + en_inter
+
+    # -50 to reduce empty space at the bottom; adjust as needed
+    new_image_height = image_height + total_text_height + padding * 2 - 50
 
     # Separate the image into top, middle (1px), and bottom parts
     top_part_height = image_height // 2
@@ -154,14 +166,21 @@ def create_fancy_thumbnail(image, text, text_color, padding, wrap=35):
     new_image.paste(middle_part, (0, top_part_height))
     new_image.paste(bottom_part, (0, top_part_height + new_middle_height))
 
-    # Draw the title text on the new image
     draw = ImageDraw.Draw(new_image)
     y = top_part_height + padding
-    for line in lines:
-        draw.text((120, y), line, font=font, fill=text_color, align="left")
-        y += get_text_height(draw, line, font, wrap) + padding
 
-    # Draw the username "PlotPulse" at the specific position
+    # Draw English title
+    for line in en_lines:
+        draw.text((120, y), line, font=font_en, fill=text_color, align="left")
+        y += get_text_height(draw, line, font_en, wrap_en) + padding
+
+    # Draw Chinese translation below, if available
+    if text_zh:
+        y += padding  # extra gap between EN and ZH blocks
+        for line in zh_lines:
+            draw.text((120, y), line, font=font_zh, fill=text_color, align="left")
+            y += get_text_height(draw, line, font_zh, wrap_zh) + padding
+
     username_font = ImageFont.truetype(os.path.join("fonts", "Roboto-Bold.ttf"), 30)
     draw.text(
         (205, 825),
@@ -265,25 +284,22 @@ def make_final_video(
 
     Path(f"assets/temp/{reddit_id}/png").mkdir(parents=True, exist_ok=True)
 
-    # Credits to tim (beingbored)
-    # get the title_template image and draw a text in the middle part of it with the title of the thread
-    title_template = Image.open("assets/title_template.png")
+    title_screenshot_style = settings.config["settings"].get("title_screenshot_style", "real")
 
-    title = reddit_obj["thread_title"]
-    # Use Chinese title if available
-    title_zh = reddit_obj.get("thread_title_zh")
-    if title_zh:
-        title = title_zh
-    else:
-        title = name_normalize(title)
+    if title_screenshot_style == "fancy":
+        # Generate a fancy title card using the template image.
+        # Display both English original and Chinese translation (if available).
+        title_template = Image.open("assets/title_template.png")
+        title_en = name_normalize(reddit_obj["thread_title"])
+        title_zh = reddit_obj.get("thread_title_zh")
+        font_color = "#000000"
+        padding = 5
+        title_img = create_fancy_thumbnail(
+            title_template, title_en, font_color, padding, text_zh=title_zh
+        )
+        title_img.save(f"assets/temp/{reddit_id}/png/title.png")
+    # else: use the real screenshot already saved by screenshot_downloader.py
 
-    font_color = "#000000"
-    padding = 5
-
-    # create_fancy_thumbnail(image, text, text_color, padding
-    title_img = create_fancy_thumbnail(title_template, title, font_color, padding)
-
-    title_img.save(f"assets/temp/{reddit_id}/png/title.png")
     image_clips.insert(
         0,
         ffmpeg.input(f"assets/temp/{reddit_id}/png/title.png")["v"].filter(
